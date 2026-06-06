@@ -1,0 +1,235 @@
+{
+  "patients": [
+    {
+      "id": "patient-1",
+      "role": "patient",
+      "name": "Rahul Sharma",
+      "age": 28,
+      "email": "rahul@smartcare.app",
+      "phone": "9991112223",
+      "password": "patient123",
+      "createdAt": "2026-03-22T13:36:33.727Z"
+    },
+    {
+      "id": "patient-6c254b44-21b7-4a7b-9942-066ae3213ea7",
+      "role": "patient",
+      "name": "Jash Ashar",
+      "age": 21,
+      "email": "jash@smartcare.app",
+      "phone": "9903836974",
+      "password": "jash123",
+      "createdAt": "2026-03-24T04:31:35.908Z"
+    }
+  ],
+  "doctors": [
+    {
+      "id": "doctor-1",
+      "role": "doctor",
+      "name": "Dr. Meera Iyer",
+      "age": 42,
+      "email": "meera@smartcare.app",
+      "phone": "9887776665",
+      "specialization": "Cardiologist",
+      "experience": 15,
+      "password": "doctor123",
+      "slots": [
+        "09:00",
+        "11:00",
+        "14:00",
+        "16:00"
+      ],
+      "createdAt": "2026-03-22T13:36:33.727Z"
+    },
+    {
+      "id": "doctor-2",
+      "role": "doctor",
+      "name": "Dr. Arjun Patel",
+      "age": 37,
+      "email": "arjun@smartcare.app",
+      "phone": "9877001100",
+      "specialization": "Dermatologist",
+      "experience": 10,
+      "password": "doctor123",
+      "slots": [
+        "09:00",
+        "11:00",
+        "14:00",
+        "16:00"
+      ],
+      "createdAt": "2026-03-22T13:36:33.727Z"
+    },
+    {
+      "id": "doctor-841b45b7-ce01-4b58-a3fc-6f2d6b7c2768",
+      "role": "doctor",
+      "name": "Priyanshu Bahuguna",
+      "age": 40,
+      "email": "priyanshu@smartcare.app",
+      "phone": "9999999999",
+      "specialization": "Pediatrician",
+      "experience": 0,
+      "password": "priyanshu123",
+      "slots": [
+        "09:00",
+        "11:00",
+        "14:00"
+      ],
+      "createdAt": "2026-03-24T04:29:39.689Z"
+    },
+    {
+      "id": "doctor-feb29a6b-59b9-4b0e-b0db-a6de711edca0",
+      "role": "doctor",
+      "name": "Harshit Harlalka",
+      "age": 21,
+      "email": "harshit@smartcare.app",
+      "phone": "1111111111",
+      "specialization": "Neuro Surgeon",
+      "experience": 4,
+      "password": "harshit123",
+      "slots": [
+        "09:00",
+        "11:00",
+        "14:00",
+        "16:00"
+      ],
+      "createdAt": "2026-04-15T03:32:45.276Z"
+    }
+  ],
+  "admins": [
+    {
+      "id": "admin-1",
+      "role": "admin",
+      "name": "System Admin",
+      "email": "admin@smartcare.app",
+      "password": "admin123",
+      "createdAt": "2026-03-22T13:36:33.727Z"
+    }
+  ],
+  "appointments": [
+    {
+      "id": "appointment-1",
+      "patientId": "patient-1",
+      "patientName": "Rahul Sharma",
+      "doctorId": "doctor-1",
+      "doctorName": "Dr. Meera Iyer",
+      "specialization": "Cardiologist",
+      "date": "2026-03-25",
+      "time": "11:00",
+      "status": "completed",
+      "rated": true,
+      "createdAt": "2026-03-22T13:36:33.727Z"
+    },
+    {
+      "id": "appointment-afcb96b9-5062-4b1d-bb75-388199e2ea1c",
+      "patientId": "patient-1",
+      "patientName": "Rahul Sharma",
+      "doctorId": "doctor-2",
+      "doctorName": "Dr. Arjun Patel",
+      "specialization": "Dermatologist",
+      "date": "2026-03-24",
+      "time": "16:00",
+      "status": "cancelled",
+      "rated": false,
+      "createdAt": "2026-03-24T04:24:29.192Z"
+    },
+    {
+      "id": "appointment-caf0902a-0bba-4e59-b232-5dfd0f4ed7d2",
+      "patientId": "patient-1",
+      "patientName": "Rahul Sharma",
+      "doctorId": "doctor-1",
+      "doctorName": "Dr. Meera Iyer",
+      "specialization": "Cardiologist",
+      "date": "2026-03-26",
+      "time": "14:00",
+      "status": "completed",
+      "rated": true,
+      "createdAt": "2026-03-24T04:25:06.490Z"
+    },
+    {
+      "id": "appointment-842f96b4-2630-44a6-a294-faa82012be7d",
+      "patientId": "patient-1",
+      "patientName": "Rahul Sharma",
+      "doctorId": "doctor-2",
+      "doctorName": "Dr. Arjun Patel",
+      "specialization": "Dermatologist",
+      "date": "2026-03-26",
+      "time": "09:00",
+      "status": "cancelled",
+      "rated": false,
+      "createdAt": "2026-03-24T04:25:19.329Z"
+    },
+    {
+      "id": "appointment-04e38e0c-f8b8-46e4-8e04-72dda0795631",
+      "patientId": "patient-6c254b44-21b7-4a7b-9942-066ae3213ea7",
+      "patientName": "Jash Ashar",
+      "doctorId": "doctor-841b45b7-ce01-4b58-a3fc-6f2d6b7c2768",
+      "doctorName": "Priyanshu Bahuguna",
+      "specialization": "Pediatrician",
+      "date": "2026-03-26",
+      "time": "11:00",
+      "status": "completed",
+      "rated": false,
+      "createdAt": "2026-03-24T04:31:55.174Z"
+    },
+    {
+      "id": "appointment-022c1de2-ff2b-4874-af8b-ebcb95685f5b",
+      "patientId": "patient-1",
+      "patientName": "Rahul Sharma",
+      "doctorId": "doctor-841b45b7-ce01-4b58-a3fc-6f2d6b7c2768",
+      "doctorName": "Priyanshu Bahuguna",
+      "specialization": "Pediatrician",
+      "date": "2026-04-15",
+      "time": "11:00",
+      "status": "completed",
+      "rated": true,
+      "createdAt": "2026-04-15T03:29:18.337Z"
+    },
+    {
+      "id": "appointment-27030346-7c31-4611-91f0-1bd9bcbcca8c",
+      "patientId": "patient-1",
+      "patientName": "Rahul Sharma",
+      "doctorId": "doctor-2",
+      "doctorName": "Dr. Arjun Patel",
+      "specialization": "Dermatologist",
+      "date": "2026-04-16",
+      "time": "09:00",
+      "status": "cancelled",
+      "rated": false,
+      "createdAt": "2026-04-15T03:29:28.591Z"
+    }
+  ],
+  "ratings": [
+    {
+      "id": "rating-934be456-deb0-4af3-be30-cb68825246b7",
+      "appointmentId": "appointment-caf0902a-0bba-4e59-b232-5dfd0f4ed7d2",
+      "doctorId": "doctor-1",
+      "doctorName": "Dr. Meera Iyer",
+      "patientId": "patient-1",
+      "patientName": "Rahul Sharma",
+      "score": 5,
+      "comment": "good",
+      "createdAt": "2026-03-24T04:27:07.805Z"
+    },
+    {
+      "id": "rating-1dc8fac3-006f-4d9a-8d3b-2dfb5ad73363",
+      "appointmentId": "appointment-1",
+      "doctorId": "doctor-1",
+      "doctorName": "Dr. Meera Iyer",
+      "patientId": "patient-1",
+      "patientName": "Rahul Sharma",
+      "score": 1,
+      "comment": "ffff",
+      "createdAt": "2026-04-15T03:29:42.105Z"
+    },
+    {
+      "id": "rating-93e98da1-748f-4e54-a103-e7dcd9dff3a9",
+      "appointmentId": "appointment-022c1de2-ff2b-4874-af8b-ebcb95685f5b",
+      "doctorId": "doctor-841b45b7-ce01-4b58-a3fc-6f2d6b7c2768",
+      "doctorName": "Priyanshu Bahuguna",
+      "patientId": "patient-1",
+      "patientName": "Rahul Sharma",
+      "score": 5,
+      "comment": "priyamshu sir is very good",
+      "createdAt": "2026-04-15T03:35:14.076Z"
+    }
+  ]
+}
