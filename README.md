@@ -134,7 +134,7 @@ SmartCare/
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/SmartCare.git
+git clone https://github.com/ChlorineFlow/SmartCare.git
 cd SmartCare
 ```
 
@@ -318,7 +318,7 @@ This project is licensed under the **MIT License**.
 
 <div align="center">
 
-Made with ❤️ by **Priyanshu Bahuguna**
+Made by **Priyanshu Bahuguna**
 
 ⭐ Star this repo if you found it helpful!
 
