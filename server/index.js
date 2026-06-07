@@ -10,11 +10,12 @@
  */
 import "dotenv/config";
 import express from "express";
+
 import cors from "cors";
 import {
   query, sanitizeUser, makeId, toCamel, doctorStats, initDb, generateOtp,
 } from "./db.js";
-import { sendOtpEmail } from "./mailer.js";
+import { sendOtpEmail, sendCancellationEmail } from "./mailer.js";
 
 const app  = express();
 const PORT = process.env.PORT || 4000;
@@ -487,11 +488,42 @@ app.patch("/api/appointments/:id/status", async (req, res) => {
     const { status } = req.body;
     if (!["booked","completed","cancelled"].includes(status))
       return res.status(400).json({ message: "Invalid status" });
+
+    // Fetch appointment + patient email BEFORE updating
+    const { rows: existing } = await query(
+      `SELECT a.*, p.email AS patient_email
+       FROM appointments a
+       JOIN patients p ON p.id = a.patient_id
+       WHERE a.id = $1`,
+      [req.params.id]
+    );
+    if (!existing.length) return res.status(404).json({ message: "Appointment not found" });
+
+    // Update status
     const { rows } = await query(
       "UPDATE appointments SET status=$1 WHERE id=$2 RETURNING *",
       [status, req.params.id]
     );
-    if (!rows.length) return res.status(404).json({ message: "Appointment not found" });
+
+    // Send cancellation email if status changed to cancelled
+    if (status === "cancelled") {
+      const appt = existing[0];
+      try {
+        await sendCancellationEmail({
+          to:             appt.patient_email,
+          patientName:    appt.patient_name,
+          doctorName:     appt.doctor_name,
+          specialization: appt.specialization,
+          date:           appt.date,
+          time:           appt.time,
+        });
+        console.log(`📧  Cancellation email sent to ${appt.patient_email}`);
+      } catch (mailErr) {
+        // Don't fail the request if email fails — just log it
+        console.error("❌  Cancellation email failed:", mailErr.message);
+      }
+    }
+
     return res.json(toCamel(rows[0]));
   } catch (err) {
     console.error("PATCH /api/appointments/:id/status:", err.message);
