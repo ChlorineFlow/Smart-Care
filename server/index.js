@@ -15,7 +15,7 @@ import cors from "cors";
 import {
   query, sanitizeUser, makeId, toCamel, doctorStats, initDb, generateOtp,
 } from "./db.js";
-import { sendOtpEmail, sendCancellationEmail } from "./mailer.js";
+import { sendOtpEmail, sendCancellationEmail, sendRescheduleEmail } from "./mailer.js";
 
 const app  = express();
 const PORT = process.env.PORT || 4000;
@@ -640,7 +640,68 @@ app.delete("/api/patients/:id", async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 });
+/** PATCH /api/appointments/:id/reschedule */
+app.patch("/api/appointments/:id/reschedule", async (req, res) => {
+  try {
+    const { date, time } = req.body;
+    if (!date || !time)
+      return res.status(400).json({ message: "New date and time are required" });
 
+    // Get existing appointment
+    const { rows: existing } = await query(
+      "SELECT * FROM appointments WHERE id=$1", [req.params.id]
+    );
+    if (!existing.length)
+      return res.status(404).json({ message: "Appointment not found" });
+
+    const appt = existing[0];
+    if (appt.status !== "booked")
+      return res.status(400).json({ message: "Only booked appointments can be rescheduled" });
+
+    // Check new slot is not already taken
+    const conflict = await query(
+      `SELECT 1 FROM appointments
+       WHERE doctor_id=$1 AND date=$2 AND time=$3
+       AND status='booked' AND id != $4`,
+      [appt.doctor_id, date, time, req.params.id]
+    );
+    if (conflict.rows.length)
+      return res.status(409).json({ message: "This slot is already booked. Please choose another." });
+
+    // Update
+    const { rows } = await query(
+      "UPDATE appointments SET date=$1, time=$2 WHERE id=$3 RETURNING *",
+      [date, time, req.params.id]
+    );
+
+    // Send reschedule confirmation email
+    try {
+      const { rows: patRows } = await query(
+        "SELECT email FROM patients WHERE id=$1", [appt.patient_id]
+      );
+      if (patRows.length) {
+        await sendRescheduleEmail({
+          to:             patRows[0].email,
+          patientName:    appt.patient_name,
+          doctorName:     appt.doctor_name,
+          specialization: appt.specialization,
+          oldDate:        appt.date,
+          oldTime:        appt.time,
+          newDate:        date,
+          newTime:        time,
+        });
+        console.log(`📧  Reschedule email sent to ${patRows[0].email}`);
+      }
+    } catch (mailErr) {
+      console.error("❌  Reschedule email failed:", mailErr.message);
+    }
+
+    return res.json(toCamel(rows[0]));
+  } catch (err) {
+    console.error("PATCH /api/appointments/:id/reschedule:", err.message);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
 // ── Start ─────────────────────────────────────────────────────
 initDb()
   .then(() => app.listen(PORT, () => {

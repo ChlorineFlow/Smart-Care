@@ -191,3 +191,100 @@ export const sendCancellationEmail = async ({ to, patientName, doctorName, speci
     text: `Dear ${patientName},\n\nYour appointment with ${doctorName} (${specialization}) on ${formattedDate} at ${time} has been cancelled.\n\nPlease log in to SmartCare to book a new appointment.\n\nWe apologize for the inconvenience.`,
   });
 };
+// ── Reschedule confirmation email ─────────────────────────────
+export const sendRescheduleEmail = async ({
+  to, patientName, doctorName, specialization,
+  oldDate, oldTime, newDate, newTime
+}) => {
+  const fmt = (d) => new Date(d).toLocaleDateString("en-IN", {
+    weekday: "long", day: "numeric", month: "long", year: "numeric",
+  });
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;">
+
+        <!-- Header -->
+        <tr><td style="background:linear-gradient(135deg,#1e3a5f 0%,#0369a1 100%);border-radius:16px 16px 0 0;padding:32px 40px;text-align:center;">
+          <div style="display:inline-flex;align-items:center;gap:10px;">
+            <div style="width:40px;height:40px;background:rgba(255,255,255,0.2);border-radius:10px;display:inline-block;line-height:40px;text-align:center;">
+              <span style="color:white;font-size:20px;">❤</span>
+            </div>
+            <span style="color:white;font-size:20px;font-weight:700;">SmartCare</span>
+          </div>
+          <p style="color:#bae6fd;margin:12px 0 0;font-size:14px;">Appointment Rescheduled</p>
+        </td></tr>
+
+        <!-- Body -->
+        <tr><td style="background:#ffffff;padding:40px;">
+          <p style="color:#1e293b;font-size:16px;margin:0 0 8px;">Dear <strong>${patientName}</strong>,</p>
+          <p style="color:#475569;font-size:15px;margin:0 0 28px;line-height:1.6;">
+            Your appointment has been successfully <strong style="color:#0369a1;">rescheduled</strong>. Here are the updated details:
+          </p>
+
+          <!-- Old slot -->
+          <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:20px;margin:0 0 16px;">
+            <p style="color:#991b1b;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin:0 0 12px;">Previous Slot</p>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="color:#64748b;font-size:14px;padding:4px 0;width:40%;">Date</td>
+                <td style="color:#1e293b;font-size:14px;font-weight:600;text-decoration:line-through;">${fmt(oldDate)}</td>
+              </tr>
+              <tr>
+                <td style="color:#64748b;font-size:14px;padding:4px 0;">Time</td>
+                <td style="color:#1e293b;font-size:14px;font-weight:600;text-decoration:line-through;">${oldTime}</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- New slot -->
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px;margin:0 0 28px;">
+            <p style="color:#166534;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin:0 0 12px;">New Slot ✓</p>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="color:#64748b;font-size:14px;padding:4px 0;width:40%;">Doctor</td>
+                <td style="color:#1e293b;font-size:14px;font-weight:600;">${doctorName}</td>
+              </tr>
+              <tr>
+                <td style="color:#64748b;font-size:14px;padding:4px 0;">Specialization</td>
+                <td style="color:#1e293b;font-size:14px;font-weight:600;">${specialization}</td>
+              </tr>
+              <tr>
+                <td style="color:#64748b;font-size:14px;padding:4px 0;">Date</td>
+                <td style="color:#166534;font-size:14px;font-weight:700;">${fmt(newDate)}</td>
+              </tr>
+              <tr>
+                <td style="color:#64748b;font-size:14px;padding:4px 0;">Time</td>
+                <td style="color:#166534;font-size:14px;font-weight:700;">${newTime}</td>
+              </tr>
+            </table>
+          </div>
+
+          <p style="color:#94a3b8;font-size:13px;margin:0;">Please make a note of your new appointment time. We look forward to seeing you!</p>
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="background:#f8fafc;border-radius:0 0 16px 16px;padding:20px 40px;text-align:center;border-top:1px solid #e2e8f0;">
+          <p style="color:#94a3b8;font-size:12px;margin:0;">© ${new Date().getFullYear()} SmartCare · Healthcare Appointment Platform</p>
+          <p style="color:#cbd5e1;font-size:11px;margin:6px 0 0;">This is an automated message, please do not reply.</p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  await transporter.sendMail({
+    from:    process.env.SMTP_FROM || `SmartCare <${process.env.SMTP_USER}>`,
+    to,
+    subject: `📅 Appointment Rescheduled – ${doctorName} on ${fmt(newDate)}`,
+    html,
+    text: `Dear ${patientName},\n\nYour appointment with ${doctorName} has been rescheduled.\n\nOld: ${fmt(oldDate)} at ${oldTime}\nNew: ${fmt(newDate)} at ${newTime}\n\nThank you for using SmartCare.`,
+  });
+};

@@ -66,6 +66,12 @@ const api = {
   updateAppointmentStatus(id, status) {
     return request(`/appointments/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
   },
+  rescheduleAppointment(id, date, time) {
+  return request(`/appointments/${id}/reschedule`, {
+    method: "PATCH",
+    body: JSON.stringify({ date, time }),
+  });
+},
 
   // ── RATINGS ──────────────────────────────────────────────────
   submitRating(payload) {
