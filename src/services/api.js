@@ -87,6 +87,8 @@ const api = {
   // ── ADMIN ────────────────────────────────────────────────────
 getAdminStats() { return request("/admin/stats"); },
 
+getDoctorAnalytics(id) { return request(`/doctors/${id}/analytics`); },
+
 // ── PATIENTS ─────────────────────────────────────────────────
 getPatients() { return request("/patients"); },
 deletePatient(id) {

@@ -702,6 +702,102 @@ app.patch("/api/appointments/:id/reschedule", async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 });
+
+/** GET /api/doctors/:id/analytics */
+app.get("/api/doctors/:id/analytics", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [apptRes, ratingsRes] = await Promise.all([
+      query("SELECT * FROM appointments WHERE doctor_id=$1", [id]),
+      query("SELECT * FROM ratings WHERE doctor_id=$1 ORDER BY created_at DESC LIMIT 5", [id]),
+    ]);
+
+    const appointments = apptRes.rows.map(toCamel);
+    const recentRatings = ratingsRes.rows.map(toCamel);
+
+    // ── Status breakdown ──────────────────────────────────────
+    const statusCount = { booked: 0, completed: 0, cancelled: 0 };
+    for (const a of appointments) statusCount[a.status] = (statusCount[a.status] || 0) + 1;
+
+    // ── Busiest days (day of week) ────────────────────────────
+    const dayCount = { Mon:0, Tue:0, Wed:0, Thu:0, Fri:0, Sat:0, Sun:0 };
+    const dayNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+    for (const a of appointments) {
+      const day = dayNames[new Date(a.date).getDay()];
+      dayCount[day]++;
+    }
+
+    // ── Monthly trend (last 6 months) ─────────────────────────
+    const monthlyMap = {};
+    for (const a of appointments) {
+      const d     = new Date(a.date);
+      const key   = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = d.toLocaleDateString("en-IN", { month: "short", year: "2-digit" });
+      if (!monthlyMap[key]) monthlyMap[key] = { label, total: 0, completed: 0 };
+      monthlyMap[key].total++;
+      if (a.status === "completed") monthlyMap[key].completed++;
+    }
+    const monthlyTrend = Object.entries(monthlyMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-6)
+      .map(([, v]) => v);
+
+    // ── Slot popularity ───────────────────────────────────────
+    const slotMap = {};
+    for (const a of appointments) {
+      slotMap[a.time] = (slotMap[a.time] || 0) + 1;
+    }
+    const slotPopularity = Object.entries(slotMap)
+      .sort(([, a], [, b]) => b - a)
+      .map(([time, count]) => ({ time, count }));
+
+    // ── Rating distribution ───────────────────────────────────
+    const { rows: allRatings } = await query(
+      "SELECT score FROM ratings WHERE doctor_id=$1", [id]
+    );
+    const ratingDist = { 1:0, 2:0, 3:0, 4:0, 5:0 };
+    for (const r of allRatings) ratingDist[r.score]++;
+    const avgRating = allRatings.length
+      ? (allRatings.reduce((s, r) => s + r.score, 0) / allRatings.length).toFixed(1)
+      : "0.0";
+
+    // ── Today & this week ─────────────────────────────────────
+    const todayStr = new Date().toISOString().split("T")[0];
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    const weekStr = weekStart.toISOString().split("T")[0];
+
+    const todayCount = appointments.filter(a => a.date === todayStr && a.status === "booked").length;
+    const weekCount  = appointments.filter(a => a.date >= weekStr && a.status !== "cancelled").length;
+    const completionRate = appointments.length
+      ? Math.round((statusCount.completed / appointments.length) * 100)
+      : 0;
+
+    return res.json({
+      summary: {
+        total:          appointments.length,
+        completed:      statusCount.completed,
+        booked:         statusCount.booked,
+        cancelled:      statusCount.cancelled,
+        todayCount,
+        weekCount,
+        completionRate,
+        avgRating,
+        totalReviews:   allRatings.length,
+      },
+      busyDays:       Object.entries(dayCount).map(([day, count]) => ({ day, count })),
+      monthlyTrend,
+      slotPopularity,
+      ratingDistribution: Object.entries(ratingDist).map(([score, count]) => ({ score: Number(score), count })),
+      recentRatings,
+    });
+  } catch (err) {
+    console.error("GET /api/doctors/:id/analytics:", err.message);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 // ── Start ─────────────────────────────────────────────────────
 initDb()
   .then(() => app.listen(PORT, () => {

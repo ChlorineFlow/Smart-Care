@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom
 import Landing from "../pages/Landing";
 import SelectRole from "../pages/auth/SelectRole";
 import ManagePatients from "../pages/admin/ManagePatients";
+import DoctorAnalytics from "../pages/doctor/Analytics";
 import PatientSignup from "../pages/auth/PatientSignup";
 import PatientLogin from "../pages/auth/PatientLogin";
 import DoctorLogin from "../pages/auth/DoctorLogin";
@@ -66,6 +67,7 @@ export default function AppRoutes() {
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<DoctorDashboard />} />
             <Route path="appointments" element={<Appointments />} />
+            <Route path="analytics" element={<DoctorAnalytics />} />
             <Route path="reviews" element={<Reviews />} />
           </Route>
         </Route>

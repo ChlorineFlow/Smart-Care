@@ -19,6 +19,7 @@ export const SIDEBAR_LINKS = {
 	doctor: [
 		{ label: "Dashboard", to: "/doctor/dashboard" },
 		{ label: "Appointments", to: "/doctor/appointments" },
+		{ label: "Analytics",   to: "/doctor/analytics" },
 		{ label: "Reviews", to: "/doctor/reviews" },
 	],
 	admin: [
