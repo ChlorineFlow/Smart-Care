@@ -119,6 +119,18 @@ BEGIN
   END IF;
 END $$;
 
+-- ── DOCTOR BLOCKED DATES ──────────────────────────────────────
+CREATE TABLE IF NOT EXISTS doctor_blocked_dates (
+  id          SERIAL      PRIMARY KEY,
+  doctor_id   TEXT        NOT NULL REFERENCES doctors(id) ON DELETE CASCADE,
+  blocked_date DATE       NOT NULL,
+  reason      TEXT        NOT NULL DEFAULT '',
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (doctor_id, blocked_date)
+);
+
+CREATE INDEX IF NOT EXISTS idx_blocked_dates_doctor ON doctor_blocked_dates(doctor_id);
+
 -- ── INDEXES ───────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_otps_email      ON otps(email, purpose);
 CREATE INDEX IF NOT EXISTS idx_appt_patient    ON appointments(patient_id);

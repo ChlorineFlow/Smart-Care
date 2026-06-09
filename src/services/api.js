@@ -10,7 +10,7 @@ const request = async (path, options = {}) => {
     try { const b = await response.json(); message = b.message || message; } catch {}
     throw new Error(message);
   }
-  if (response.status === 204) return null;
+  if (response.status === 204 || response.headers.get("content-length") === "0") return null;
   return response.json();
 };
 
@@ -88,6 +88,21 @@ const api = {
 getAdminStats() { return request("/admin/stats"); },
 
 getDoctorAnalytics(id) { return request(`/doctors/${id}/analytics`); },
+
+getBlockedDates(doctorId) {
+  return request(`/doctors/${doctorId}/blocked-dates`);
+},
+blockDate(doctorId, date, reason) {
+  return request(`/doctors/${doctorId}/blocked-dates`, {
+    method: "POST",
+    body: JSON.stringify({ date, reason }),
+  });
+},
+unblockDate(doctorId, date) {
+  return request(`/doctors/${doctorId}/blocked-dates/${date}`, {
+    method: "DELETE",
+  });
+},
 
 // ── PATIENTS ─────────────────────────────────────────────────
 getPatients() { return request("/patients"); },
