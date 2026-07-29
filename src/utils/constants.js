@@ -14,11 +14,13 @@ export const SIDEBAR_LINKS = {
 		{ label: "Dashboard", to: "/patient/dashboard" },
 		{ label: "Book Appointment", to: "/patient/book" },
 		{ label: "History", to: "/patient/history" },
+		{ label: "Prescriptions", to: "/patient/prescriptions" },
 		{ label: "Ratings", to: "/patient/ratings" },
 	],
 	doctor: [
 		{ label: "Dashboard", to: "/doctor/dashboard" },
 		{ label: "Appointments", to: "/doctor/appointments" },
+		{ label: "Prescriptions", to: "/doctor/prescriptions" },  
 		{ label: "Analytics",   to: "/doctor/analytics" },
 		{ label: "Availability", to: "/doctor/availability" },
 		{ label: "Reviews", to: "/doctor/reviews" },

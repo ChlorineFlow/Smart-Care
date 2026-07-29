@@ -131,6 +131,23 @@ CREATE TABLE IF NOT EXISTS doctor_blocked_dates (
 
 CREATE INDEX IF NOT EXISTS idx_blocked_dates_doctor ON doctor_blocked_dates(doctor_id);
 
+-- ── PRESCRIPTIONS ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS prescriptions (
+  id              TEXT        PRIMARY KEY,
+  appointment_id  TEXT        NOT NULL UNIQUE REFERENCES appointments(id) ON DELETE CASCADE,
+  doctor_id       TEXT        NOT NULL REFERENCES doctors(id)  ON DELETE CASCADE,
+  patient_id      TEXT        NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+  patient_name    TEXT        NOT NULL,
+  doctor_name     TEXT        NOT NULL,
+  file_name       TEXT        NOT NULL,
+  file_data       TEXT        NOT NULL,  -- base64 encoded PDF
+  file_size       INTEGER     NOT NULL DEFAULT 0,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_prescriptions_patient ON prescriptions(patient_id);
+CREATE INDEX IF NOT EXISTS idx_prescriptions_doctor  ON prescriptions(doctor_id);
+
 -- ── INDEXES ───────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_otps_email      ON otps(email, purpose);
 CREATE INDEX IF NOT EXISTS idx_appt_patient    ON appointments(patient_id);

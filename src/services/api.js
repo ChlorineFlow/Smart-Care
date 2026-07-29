@@ -89,6 +89,21 @@ getAdminStats() { return request("/admin/stats"); },
 
 getDoctorAnalytics(id) { return request(`/doctors/${id}/analytics`); },
 
+// ── PRESCRIPTIONS ─────────────────────────────────────────────
+uploadPrescription(payload) {
+  return request("/prescriptions", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+},
+getPrescriptions(params = {}) {
+  const q = new URLSearchParams(params).toString();
+  return request(`/prescriptions${q ? "?" + q : ""}`);
+},
+downloadPrescription(id) {
+  return `${API_BASE_URL}/prescriptions/${id}/download`;
+},
+
 getBlockedDates(doctorId) {
   return request(`/doctors/${doctorId}/blocked-dates`);
 },

@@ -31,7 +31,7 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 app.use(cors({ origin: process.env.CORS_ORIGIN || "http://localhost:5173" }));
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 
 // ── Shared util ───────────────────────────────────────────────
 const emailTaken = async (email) => {
@@ -1055,6 +1055,99 @@ app.delete("/api/doctors/:id/blocked-dates/:date", async (req, res) => {
     return res.status(204).send();
   } catch (err) {
     console.error("DELETE /api/doctors/:id/blocked-dates/:date:", err.message);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// ══════════════════════════════════════════════════════════════
+//  PRESCRIPTIONS
+// ══════════════════════════════════════════════════════════════
+
+/** POST /api/prescriptions  –  Doctor uploads prescription */
+app.post("/api/prescriptions", async (req, res) => {
+  try {
+    const { appointmentId, doctorId, patientId, fileName, fileData } = req.body;
+
+    if (!appointmentId || !doctorId || !patientId || !fileName || !fileData)
+      return res.status(400).json({ message: "All fields are required" });
+
+    // Validate it's a PDF (base64 starts with PDF magic bytes)
+    const decoded = Buffer.from(fileData.split(",").pop(), "base64");
+    if (decoded.length > 5 * 1024 * 1024)
+      return res.status(400).json({ message: "File too large. Maximum size is 5MB." });
+
+    // Get appointment details
+    const apptRes = await query(
+      "SELECT * FROM appointments WHERE id=$1", [appointmentId]
+    );
+    if (!apptRes.rows.length)
+      return res.status(404).json({ message: "Appointment not found" });
+
+    const appt = toCamel(apptRes.rows[0]);
+
+    // Upsert — replace if already exists for this appointment
+    const { rows } = await query(
+      `INSERT INTO prescriptions
+         (id, appointment_id, doctor_id, patient_id, patient_name, doctor_name,
+          file_name, file_data, file_size, created_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW())
+       ON CONFLICT (appointment_id)
+       DO UPDATE SET file_name=$7, file_data=$8, file_size=$9, created_at=NOW()
+       RETURNING id, appointment_id, doctor_id, patient_id, patient_name,
+                 doctor_name, file_name, file_size, created_at`,
+      [makeId("prescription"), appointmentId, doctorId, patientId,
+       appt.patientName, appt.doctorName, fileName, fileData, decoded.length]
+    );
+
+    return res.status(201).json(toCamel(rows[0]));
+  } catch (err) {
+    console.error("POST /api/prescriptions:", err.message);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+/** GET /api/prescriptions?patientId=xxx  –  Patient fetches their prescriptions */
+app.get("/api/prescriptions", async (req, res) => {
+  try {
+    const { patientId, doctorId, appointmentId } = req.query;
+    let sql = `SELECT id, appointment_id, doctor_id, patient_id, patient_name,
+                      doctor_name, file_name, file_size, created_at
+               FROM prescriptions WHERE 1=1`;
+    const params = [];
+    if (patientId)      { params.push(patientId);      sql += ` AND patient_id=$${params.length}`;     }
+    if (doctorId)       { params.push(doctorId);        sql += ` AND doctor_id=$${params.length}`;      }
+    if (appointmentId)  { params.push(appointmentId);   sql += ` AND appointment_id=$${params.length}`; }
+    sql += " ORDER BY created_at DESC";
+    const { rows } = await query(sql, params);
+    return res.json(rows.map(toCamel));
+  } catch (err) {
+    console.error("GET /api/prescriptions:", err.message);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+/** GET /api/prescriptions/:id/download  –  Download the actual file */
+app.get("/api/prescriptions/:id/download", async (req, res) => {
+  try {
+    const { rows } = await query(
+      "SELECT * FROM prescriptions WHERE id=$1", [req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ message: "Prescription not found" });
+
+    const p = rows[0];
+    const base64Data = p.file_data.includes(",")
+      ? p.file_data.split(",")[1]
+      : p.file_data;
+    const buffer = Buffer.from(base64Data, "base64");
+
+    res.set({
+      "Content-Type":        "application/pdf",
+      "Content-Disposition": `attachment; filename="${p.file_name}"`,
+      "Content-Length":      buffer.length,
+    });
+    return res.send(buffer);
+  } catch (err) {
+    console.error("GET /api/prescriptions/:id/download:", err.message);
     return res.status(500).json({ message: "Internal server error" });
   }
 });

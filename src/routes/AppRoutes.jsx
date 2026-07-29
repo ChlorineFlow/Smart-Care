@@ -25,6 +25,8 @@ import ManageDoctors from "../pages/admin/ManageDoctors";
 import ManageSlots from "../pages/admin/ManageSlots";
 import Analytics from "../pages/admin/Analytics";
 import { useAuth } from "../context/AuthContext";
+import DoctorPrescriptions  from "../pages/doctor/Prescriptions";
+import PatientPrescriptions from "../pages/patient/Prescriptions";
 
 function ProtectedRoute({ role }) {
   const { isAuthenticated, user } = useAuth();
@@ -57,6 +59,7 @@ export default function AppRoutes() {
           <Route path="/patient" element={<PatientLayout />}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<PatientDashboard />} />
+            <Route path="prescriptions" element={<PatientPrescriptions />} />
             <Route path="book" element={<BookAppointment />} />
             <Route path="history" element={<History />} />
             <Route path="ratings" element={<Ratings />} />
@@ -67,6 +70,7 @@ export default function AppRoutes() {
           <Route path="/doctor" element={<DoctorLayout />}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<DoctorDashboard />} />
+            <Route path="prescriptions" element={<DoctorPrescriptions />} />
             <Route path="appointments" element={<Appointments />} />
             <Route path="analytics" element={<DoctorAnalytics />} />
             <Route path="availability" element={<DoctorAvailability />} />
