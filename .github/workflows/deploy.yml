@@ -1,0 +1,26 @@
+name: Deploy SmartCare to AWS
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            cd /home/ubuntu/Smart-Care
+            git pull origin main
+            npm install --production
+            pm2 restart smartcare-api || pm2 start server/index.js --name smartcare-api
+            pm2 save
