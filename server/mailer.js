@@ -288,3 +288,92 @@ export const sendRescheduleEmail = async ({
     text: `Dear ${patientName},\n\nYour appointment with ${doctorName} has been rescheduled.\n\nOld: ${fmt(oldDate)} at ${oldTime}\nNew: ${fmt(newDate)} at ${newTime}\n\nThank you for using SmartCare.`,
   });
 };
+
+// ── Appointment reminder email (24 hours before) ──────────────
+export const sendReminderEmail = async ({ to, patientName, doctorName, specialization, date, time }) => {
+  const formattedDate = new Date(date + "T00:00:00").toLocaleDateString("en-IN", {
+    weekday: "long", day: "numeric", month: "long", year: "numeric",
+  });
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;">
+
+        <!-- Header -->
+        <tr><td style="background:linear-gradient(135deg,#1e3a5f 0%,#1d4ed8 100%);border-radius:16px 16px 0 0;padding:32px 40px;text-align:center;">
+          <div>
+            <div style="width:40px;height:40px;background:#3b82f6;border-radius:10px;display:inline-block;line-height:40px;text-align:center;">
+              <span style="color:white;font-size:20px;">❤</span>
+            </div>
+            <span style="color:white;font-size:20px;font-weight:700;letter-spacing:0.5px;vertical-align:middle;margin-left:10px;">SmartCare</span>
+          </div>
+          <p style="color:#bae6fd;margin:12px 0 0;font-size:14px;">Appointment Reminder</p>
+        </td></tr>
+
+        <!-- Body -->
+        <tr><td style="background:#ffffff;padding:40px;">
+          <p style="color:#1e293b;font-size:16px;margin:0 0 8px;">Hi <strong>${patientName}</strong> 👋</p>
+          <p style="color:#475569;font-size:15px;margin:0 0 28px;line-height:1.6;">
+            This is a friendly reminder that you have an appointment <strong>tomorrow</strong>. Please make sure you're prepared!
+          </p>
+
+          <!-- Appointment box -->
+          <div style="background:#eff6ff;border:2px solid #3b82f6;border-radius:12px;padding:24px;margin:0 0 24px;">
+            <p style="color:#1d4ed8;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin:0 0 16px;">📅 Your Appointment</p>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="color:#64748b;font-size:14px;padding:6px 0;width:40%;">Doctor</td>
+                <td style="color:#1e293b;font-size:14px;font-weight:700;">${doctorName}</td>
+              </tr>
+              <tr>
+                <td style="color:#64748b;font-size:14px;padding:6px 0;">Specialization</td>
+                <td style="color:#1e293b;font-size:14px;font-weight:600;">${specialization}</td>
+              </tr>
+              <tr>
+                <td style="color:#64748b;font-size:14px;padding:6px 0;">Date</td>
+                <td style="color:#1d4ed8;font-size:14px;font-weight:700;">${formattedDate}</td>
+              </tr>
+              <tr>
+                <td style="color:#64748b;font-size:14px;padding:6px 0;">Time</td>
+                <td style="color:#1d4ed8;font-size:14px;font-weight:700;">${time}</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Tips -->
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px;margin-bottom:24px;">
+            <p style="color:#166534;font-size:14px;font-weight:700;margin:0 0 10px;">💡 Before your appointment:</p>
+            <p style="color:#15803d;font-size:13px;margin:4px 0;">✓ Carry a valid ID proof</p>
+            <p style="color:#15803d;font-size:13px;margin:4px 0;">✓ Bring any previous reports or prescriptions</p>
+            <p style="color:#15803d;font-size:13px;margin:4px 0;">✓ Arrive 10 minutes early</p>
+            <p style="color:#15803d;font-size:13px;margin:4px 0;">✓ Note down your symptoms or questions</p>
+          </div>
+
+          <p style="color:#94a3b8;font-size:13px;margin:0;">We hope your appointment goes well. Take care!</p>
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="background:#f8fafc;border-radius:0 0 16px 16px;padding:20px 40px;text-align:center;border-top:1px solid #e2e8f0;">
+          <p style="color:#94a3b8;font-size:12px;margin:0;">© ${new Date().getFullYear()} SmartCare · Healthcare Appointment Platform</p>
+          <p style="color:#cbd5e1;font-size:11px;margin:6px 0 0;">This is an automated reminder. Please do not reply.</p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  await transporter.sendMail({
+    from:    process.env.SMTP_FROM || `SmartCare <${process.env.SMTP_USER}>`,
+    to,
+    subject: `⏰ Reminder: Your appointment tomorrow with ${doctorName}`,
+    html,
+    text: `Hi ${patientName},\n\nReminder: You have an appointment tomorrow with ${doctorName} (${specialization}) on ${formattedDate} at ${time}.\n\nPlease arrive 10 minutes early.\n\nSmartCare`,
+  });
+};

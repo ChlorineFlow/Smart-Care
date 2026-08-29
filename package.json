@@ -14,15 +14,16 @@
     "db:migrate": "node server/migrate.js"
   },
   "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "pg": "^8.13.3",
-    "nodemailer": "^8.0.10",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "react-router-dom": "^7.13.1"
-  },
+  "cors": "^2.8.5",
+  "dotenv": "^16.4.7",
+  "express": "^4.21.2",
+  "node-cron": "^4.6.0",
+  "nodemailer": "^8.0.10",
+  "pg": "^8.13.3",
+  "react": "^19.2.4",
+  "react-dom": "^19.2.4",
+  "react-router-dom": "^7.13.1"
+},
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@types/react": "^19.2.14",

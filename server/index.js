@@ -10,6 +10,7 @@
  */
 import "dotenv/config";
 import express from "express";
+import cron from "node-cron";
 
 import cors from "cors";
 import {
@@ -25,6 +26,7 @@ import {
   sendOtpEmail,
   sendCancellationEmail,
   sendRescheduleEmail,
+  sendReminderEmail
 } from "./mailer.js";
 
 const app = express();
@@ -1153,6 +1155,58 @@ app.get("/api/prescriptions/:id/download", async (req, res) => {
 });
 
 // ── Start ─────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+//  APPOINTMENT REMINDER CRON JOB
+//  Runs every hour — finds appointments tomorrow — sends email
+// ══════════════════════════════════════════════════════════════
+cron.schedule("0 * * * *", async () => {
+  console.log("⏰  Running appointment reminder check…");
+  try {
+    // Get tomorrow's date in YYYY-MM-DD format
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split("T")[0];
+
+    // Find all booked appointments for tomorrow that haven't been reminded
+    const { rows } = await query(
+      `SELECT a.*, p.email AS patient_email
+       FROM appointments a
+       JOIN patients p ON p.id = a.patient_id
+       WHERE a.date = $1
+         AND a.status = 'booked'`,
+      [tomorrowStr]
+    );
+
+    if (rows.length === 0) {
+      console.log(`   No appointments tomorrow (${tomorrowStr})`);
+      return;
+    }
+
+    console.log(`   Found ${rows.length} appointment(s) for ${tomorrowStr} — sending reminders…`);
+
+    let sent = 0;
+    for (const appt of rows) {
+      try {
+        await sendReminderEmail({
+          to:             appt.patient_email,
+          patientName:    appt.patient_name,
+          doctorName:     appt.doctor_name,
+          specialization: appt.specialization,
+          date:           appt.date,
+          time:           appt.time,
+        });
+        sent++;
+        console.log(`   📧  Reminder sent → ${appt.patient_email}`);
+      } catch (mailErr) {
+        console.error(`   ❌  Failed to send to ${appt.patient_email}:`, mailErr.message);
+      }
+    }
+
+    console.log(`   ✅  ${sent}/${rows.length} reminders sent`);
+  } catch (err) {
+    console.error("❌  Reminder cron error:", err.message);
+  }
+});
 initDb()
   .then(() =>
     app.listen(PORT, () => {
