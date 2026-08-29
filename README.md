@@ -56,6 +56,7 @@ Patients verify their identity via **OTP email verification** during signup and 
 - ✅ Rate and review doctors after completed appointments
 - ✅ Receive **email notification** when appointment is cancelled
 - ✅ Delete own account from dashboard
+- ✅ Receive **24-hour reminder email** before every appointment
 
 ### 👨‍⚕️ Doctor
 - ✅ Login with admin-assigned credentials
@@ -78,6 +79,14 @@ Patients verify their identity via **OTP email verification** during signup and 
 - ✅ OTP login email (passwordless)
 - ✅ Appointment cancellation notification to patient
 - ✅ Beautiful HTML email templates
+- ✅ 24-hour appointment reminder — automatic, no action needed
+
+### ⏰ Automated Scheduler
+- Cron job runs **every hour** checking for tomorrow's appointments
+- Patients receive reminder emails **24 hours before** their appointment
+- Email includes doctor name, specialization, date, time, and preparation tips
+- Runs automatically in background — no manual trigger needed
+- Logs all activity to server console for monitoring
 
 ---
 
@@ -277,6 +286,11 @@ All foreign keys use `ON DELETE CASCADE` — deleting a doctor automatically rem
 | GET | `/api/ratings` | Get ratings (filter by doctor/patient) |
 | GET | `/api/admin/stats` | Platform statistics |
 
+### Scheduler
+| Type | Schedule | Description |
+|------|----------|-------------|
+| Cron Job | Every hour (`0 * * * *`) | Scans all booked appointments for tomorrow and sends reminder emails to patients |
+
 ---
 
 ## 🔐 Default Credentials
@@ -297,7 +311,7 @@ All foreign keys use `ON DELETE CASCADE` — deleting a doctor automatically rem
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Start Vite frontend only |
-| `npm run server` | Start Express backend only |
+| `npm run server` | Starts Express API + cron job (runs every hour automatically) |
 | `npm run dev:full` | Start both concurrently |
 | `npm run build` | Build frontend for production |
 | `npm run db:migrate` | Import legacy JSON data into PostgreSQL |
