@@ -543,15 +543,22 @@ app.post("/api/appointments", async (req, res) => {
     if (conflict.rows.length)
       return res.status(409).json({ message: "This slot is already booked" });
 
-    // Check doctor hasn't blocked this date
+    // Check specific blocked date
     const blocked = await query(
       "SELECT 1 FROM doctor_blocked_dates WHERE doctor_id=$1 AND blocked_date=$2",
-      [doctorId, date],
+      [doctorId, date]
     );
     if (blocked.rows.length)
-      return res
-        .status(400)
-        .json({ message: "Doctor is not available on this date" });
+      return res.status(400).json({ message: "Doctor is not available on this date" });
+
+    // Check recurring block (day of week)
+    const dayOfWeek = new Date(date + "T00:00:00").getDay();
+    const recurringBlocked = await query(
+      "SELECT 1 FROM doctor_recurring_blocks WHERE doctor_id=$1 AND day_of_week=$2",
+      [doctorId, dayOfWeek]
+    );
+    if (recurringBlocked.rows.length)
+      return res.status(400).json({ message: "Doctor does not work on this day of the week" });
 
     const pat = toCamel(patRes.rows[0]);
     const doc = toCamel(docRes.rows[0]);
@@ -916,8 +923,8 @@ app.get("/api/doctors/:id/analytics", async (req, res) => {
     for (const r of allRatings) ratingDist[r.score]++;
     const avgRating = allRatings.length
       ? (
-          allRatings.reduce((s, r) => s + r.score, 0) / allRatings.length
-        ).toFixed(1)
+        allRatings.reduce((s, r) => s + r.score, 0) / allRatings.length
+      ).toFixed(1)
       : "0.0";
 
     // ── Today & this week ─────────────────────────────────────
@@ -992,7 +999,7 @@ app.get("/api/doctors/:id/blocked-dates", async (req, res) => {
 /** POST /api/doctors/:id/blocked-dates */
 app.post("/api/doctors/:id/blocked-dates", async (req, res) => {
   try {
-    const date   = String(req.body.date || "").slice(0, 10);
+    const date = String(req.body.date || "").slice(0, 10);
     const reason = String(req.body.reason || "");
     if (!date) return res.status(400).json({ message: "Date is required" });
 
@@ -1013,12 +1020,12 @@ app.post("/api/doctors/:id/blocked-dates", async (req, res) => {
       await query("UPDATE appointments SET status='cancelled' WHERE id=$1", [appt.id]);
       try {
         await sendCancellationEmail({
-          to:             appt.patient_email,
-          patientName:    appt.patient_name,
-          doctorName:     appt.doctor_name,
+          to: appt.patient_email,
+          patientName: appt.patient_name,
+          doctorName: appt.doctor_name,
           specialization: appt.specialization,
-          date:           appt.date,
-          time:           appt.time,
+          date: appt.date,
+          time: appt.time,
         });
         console.log(`📧  Cancellation email sent to ${appt.patient_email} (date blocked)`);
       } catch (mailErr) {
@@ -1098,7 +1105,7 @@ app.post("/api/prescriptions", async (req, res) => {
        RETURNING id, appointment_id, doctor_id, patient_id, patient_name,
                  doctor_name, file_name, file_size, created_at`,
       [makeId("prescription"), appointmentId, doctorId, patientId,
-       appt.patientName, appt.doctorName, fileName, fileData, decoded.length]
+      appt.patientName, appt.doctorName, fileName, fileData, decoded.length]
     );
 
     return res.status(201).json(toCamel(rows[0]));
@@ -1116,9 +1123,9 @@ app.get("/api/prescriptions", async (req, res) => {
                       doctor_name, file_name, file_size, created_at
                FROM prescriptions WHERE 1=1`;
     const params = [];
-    if (patientId)      { params.push(patientId);      sql += ` AND patient_id=$${params.length}`;     }
-    if (doctorId)       { params.push(doctorId);        sql += ` AND doctor_id=$${params.length}`;      }
-    if (appointmentId)  { params.push(appointmentId);   sql += ` AND appointment_id=$${params.length}`; }
+    if (patientId) { params.push(patientId); sql += ` AND patient_id=$${params.length}`; }
+    if (doctorId) { params.push(doctorId); sql += ` AND doctor_id=$${params.length}`; }
+    if (appointmentId) { params.push(appointmentId); sql += ` AND appointment_id=$${params.length}`; }
     sql += " ORDER BY created_at DESC";
     const { rows } = await query(sql, params);
     return res.json(rows.map(toCamel));
@@ -1143,13 +1150,66 @@ app.get("/api/prescriptions/:id/download", async (req, res) => {
     const buffer = Buffer.from(base64Data, "base64");
 
     res.set({
-      "Content-Type":        "application/pdf",
+      "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="${p.file_name}"`,
-      "Content-Length":      buffer.length,
+      "Content-Length": buffer.length,
     });
     return res.send(buffer);
   } catch (err) {
     console.error("GET /api/prescriptions/:id/download:", err.message);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// ══════════════════════════════════════════════════════════════
+//  RECURRING BLOCKS
+// ══════════════════════════════════════════════════════════════
+
+/** GET /api/doctors/:id/recurring-blocks */
+app.get("/api/doctors/:id/recurring-blocks", async (req, res) => {
+  try {
+    const { rows } = await query(
+      "SELECT * FROM doctor_recurring_blocks WHERE doctor_id=$1 ORDER BY day_of_week",
+      [req.params.id]
+    );
+    return res.json(rows.map(toCamel));
+  } catch (err) {
+    console.error("GET /api/doctors/:id/recurring-blocks:", err.message);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+/** POST /api/doctors/:id/recurring-blocks */
+app.post("/api/doctors/:id/recurring-blocks", async (req, res) => {
+  try {
+    const { dayOfWeek, reason = "" } = req.body;
+    if (dayOfWeek === undefined || dayOfWeek < 0 || dayOfWeek > 6)
+      return res.status(400).json({ message: "Invalid day of week (0=Sun to 6=Sat)" });
+
+    const { rows } = await query(
+      `INSERT INTO doctor_recurring_blocks (doctor_id, day_of_week, reason)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (doctor_id, day_of_week) DO UPDATE SET reason=EXCLUDED.reason
+       RETURNING *`,
+      [req.params.id, dayOfWeek, reason.trim()]
+    );
+    return res.status(201).json(toCamel(rows[0]));
+  } catch (err) {
+    console.error("POST /api/doctors/:id/recurring-blocks:", err.message);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+/** DELETE /api/doctors/:id/recurring-blocks/:day */
+app.delete("/api/doctors/:id/recurring-blocks/:day", async (req, res) => {
+  try {
+    await query(
+      "DELETE FROM doctor_recurring_blocks WHERE doctor_id=$1 AND day_of_week=$2",
+      [req.params.id, Number(req.params.day)]
+    );
+    return res.status(204).send();
+  } catch (err) {
+    console.error("DELETE /api/doctors/:id/recurring-blocks/:day:", err.message);
     return res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -1188,12 +1248,12 @@ cron.schedule("0 * * * *", async () => {
     for (const appt of rows) {
       try {
         await sendReminderEmail({
-          to:             appt.patient_email,
-          patientName:    appt.patient_name,
-          doctorName:     appt.doctor_name,
+          to: appt.patient_email,
+          patientName: appt.patient_name,
+          doctorName: appt.doctor_name,
           specialization: appt.specialization,
-          date:           appt.date,
-          time:           appt.time,
+          date: appt.date,
+          time: appt.time,
         });
         sent++;
         console.log(`   📧  Reminder sent → ${appt.patient_email}`);

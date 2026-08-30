@@ -131,6 +131,19 @@ CREATE TABLE IF NOT EXISTS doctor_blocked_dates (
 
 CREATE INDEX IF NOT EXISTS idx_blocked_dates_doctor ON doctor_blocked_dates(doctor_id);
 
+-- ── DOCTOR RECURRING BLOCKS ───────────────────────────────────
+CREATE TABLE IF NOT EXISTS doctor_recurring_blocks (
+  id          SERIAL      PRIMARY KEY,
+  doctor_id   TEXT        NOT NULL REFERENCES doctors(id) ON DELETE CASCADE,
+  day_of_week INTEGER     NOT NULL CHECK (day_of_week BETWEEN 0 AND 6),
+  -- 0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday
+  reason      TEXT        NOT NULL DEFAULT '',
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (doctor_id, day_of_week)
+);
+
+CREATE INDEX IF NOT EXISTS idx_recurring_blocks_doctor ON doctor_recurring_blocks(doctor_id);
+
 -- ── PRESCRIPTIONS ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS prescriptions (
   id              TEXT        PRIMARY KEY,

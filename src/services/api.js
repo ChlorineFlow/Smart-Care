@@ -107,6 +107,20 @@ downloadPrescription(id) {
 getBlockedDates(doctorId) {
   return request(`/doctors/${doctorId}/blocked-dates`);
 },
+getRecurringBlocks(doctorId) {
+  return request(`/doctors/${doctorId}/recurring-blocks`);
+},
+addRecurringBlock(doctorId, dayOfWeek, reason) {
+  return request(`/doctors/${doctorId}/recurring-blocks`, {
+    method: "POST",
+    body: JSON.stringify({ dayOfWeek, reason }),
+  });
+},
+removeRecurringBlock(doctorId, day) {
+  return request(`/doctors/${doctorId}/recurring-blocks/${day}`, {
+    method: "DELETE",
+  });
+},
 blockDate(doctorId, date, reason) {
   return request(`/doctors/${doctorId}/blocked-dates`, {
     method: "POST",
