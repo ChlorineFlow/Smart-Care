@@ -3,6 +3,12 @@ import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import AppointmentCard from "../../components/AppointmentCard";
 
+const pad = (n) => String(n).padStart(2, "0");
+const MONTHS_R = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DAYS_R   = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+function getDaysInMonthR(y, m) { return new Date(y, m + 1, 0).getDate(); }
+function getFirstDayR(y, m)    { return new Date(y, m, 1).getDay(); }
+
 export default function History() {
   const { user } = useAuth();
   const [appointments, setAppointments] = useState([]);
@@ -10,6 +16,10 @@ export default function History() {
   const [doctor, setDoctor]   = useState(null);  // doctor details for slot picker
   const [newDate, setNewDate] = useState("");
   const [newTime, setNewTime] = useState("");
+  const todayObj  = new Date();
+const todayStrR = `${todayObj.getFullYear()}-${pad(todayObj.getMonth()+1)}-${pad(todayObj.getDate())}`;
+const [calYear,  setCalYear]  = useState(todayObj.getFullYear());
+const [calMonth, setCalMonth] = useState(todayObj.getMonth());
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
 
@@ -25,19 +35,35 @@ export default function History() {
     await reload();
   };
 
-  const openReschedule = async (appointment) => {
-    setRescheduleTarget(appointment);
-    setNewDate(appointment.date);
-    setNewTime("");
-    setMessage({ text: "", type: "" });
-    // Load doctor slots
-    try {
-      const doc = await api.getDoctorById(appointment.doctorId);
-      setDoctor(doc);
-    } catch {
-      setDoctor(null);
-    }
-  };
+  const [blockedDates, setBlockedDates]     = useState([]);
+const [recurringBlocked, setRecurringBlocked] = useState([]);
+
+const openReschedule = async (appointment) => {
+  setRescheduleTarget(appointment);
+  setNewDate(appointment.date);
+  setNewTime("");
+  setMessage({ text: "", type: "" });
+  try {
+    const [doc, dates, recurring] = await Promise.all([
+      api.getDoctorById(appointment.doctorId),
+      api.getBlockedDates(appointment.doctorId),
+      api.getRecurringBlocks(appointment.doctorId),
+    ]);
+    setDoctor(doc);
+    setBlockedDates(dates.map(b => b.blockedDate));
+    setRecurringBlocked(recurring.map(r => r.dayOfWeek));
+  } catch {
+    setDoctor(null);
+    setBlockedDates([]);
+    setRecurringBlocked([]);
+  }
+};
+
+const isDateBlocked = (dateStr) => {
+  if (blockedDates.includes(dateStr)) return true;
+  const dow = new Date(dateStr + "T00:00:00").getDay();
+  return recurringBlocked.includes(dow);
+};
 
   const handleReschedule = async (e) => {
     e.preventDefault();
@@ -129,13 +155,61 @@ export default function History() {
               {/* New date */}
               <div>
                 <label className="text-sm font-semibold text-gray-700 block mb-2">New Date</label>
-                <input
-                  type="date"
-                  min={today}
-                  value={newDate}
-                  onChange={e => { setNewDate(e.target.value); setNewTime(""); }}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                />
+                {/* Mini calendar for date selection */}
+<div className="border border-gray-200 rounded-xl p-3">
+  {/* Month nav */}
+  <div className="flex items-center justify-between mb-2">
+    <button type="button"
+      onClick={() => { if (calMonth===0){setCalMonth(11);setCalYear(y=>y-1);} else setCalMonth(m=>m-1); }}
+      className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-gray-100">
+      <svg className="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <span className="text-xs font-bold text-gray-700">{MONTHS_R[calMonth]} {calYear}</span>
+    <button type="button"
+      onClick={() => { if (calMonth===11){setCalMonth(0);setCalYear(y=>y+1);} else setCalMonth(m=>m+1); }}
+      className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-gray-100">
+      <svg className="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+  {/* Day headers */}
+  <div className="grid grid-cols-7 mb-1">
+    {DAYS_R.map(d => <div key={d} className="text-center text-xs text-gray-400 font-medium py-0.5">{d[0]}</div>)}
+  </div>
+  {/* Days */}
+  <div className="grid grid-cols-7 gap-0.5">
+    {(() => {
+      const days = [];
+      const firstDay = getFirstDayR(calYear, calMonth);
+      const total    = getDaysInMonthR(calYear, calMonth);
+      for (let i = 0; i < firstDay; i++) days.push(<div key={`e-${i}`}/>);
+      for (let d = 1; d <= total; d++) {
+        const ds      = `${calYear}-${pad(calMonth+1)}-${pad(d)}`;
+        const isPast  = ds < todayStrR;
+        const blocked = isDateBlocked(ds);
+        const isSel   = newDate === ds;
+        let cls = "w-full aspect-square flex items-center justify-center rounded-lg text-xs font-medium transition ";
+        if (isPast)   cls += "text-gray-200 cursor-not-allowed ";
+        else if (blocked) cls += "bg-red-100 text-red-400 cursor-not-allowed ";
+        else if (isSel)   cls += "bg-blue-600 text-white font-bold cursor-pointer ";
+        else              cls += "text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer ";
+        days.push(
+          <button key={ds} type="button" disabled={isPast||blocked}
+            onClick={() => { setNewDate(ds); setNewTime(""); }}
+            className={cls}
+            title={blocked ? "Doctor unavailable" : ""}>
+            {d}
+          </button>
+        );
+      }
+      return days;
+    })()}
+  </div>
+  {/* Legend */}
+  <div className="flex items-center gap-3 mt-2 pt-2 border-t border-gray-100">
+    <span className="flex items-center gap-1 text-xs text-gray-400"><span className="w-3 h-3 rounded bg-red-100 inline-block"/>Unavailable</span>
+    <span className="flex items-center gap-1 text-xs text-gray-400"><span className="w-3 h-3 rounded bg-blue-600 inline-block"/>Selected</span>
+  </div>
+</div>
               </div>
 
               {/* Time slots */}

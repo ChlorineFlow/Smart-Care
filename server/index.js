@@ -807,6 +807,24 @@ app.patch("/api/appointments/:id/reschedule", async (req, res) => {
       return res
         .status(400)
         .json({ message: "Only booked appointments can be rescheduled" });
+    
+    // Check specific blocked date
+const blockedCheck = await query(
+  "SELECT 1 FROM doctor_blocked_dates WHERE doctor_id=$1 AND blocked_date=$2",
+  [appt.doctor_id, date]
+);
+if (blockedCheck.rows.length)
+  return res.status(400).json({ message: "Doctor is not available on this date" });
+
+// Check recurring block
+const dayOfWeek = new Date(date + "T00:00:00").getDay();
+const recurringCheck = await query(
+  "SELECT 1 FROM doctor_recurring_blocks WHERE doctor_id=$1 AND day_of_week=$2",
+  [appt.doctor_id, dayOfWeek]
+);
+if (recurringCheck.rows.length)
+  return res.status(400).json({ message: "Doctor does not work on this day of the week" });
+        
 
     // Check new slot is not already taken
     const conflict = await query(
