@@ -455,7 +455,7 @@ Copyright (c) 2026 Zuhair Ali, Priyanshu Bahuguna, Ayush Dimri
 
 <div align="center">
 
-Made with ❤️ by **Zuhair Ali, Priyanshu Bahuguna & Ayush Dimri**
+Made with by **Priyanshu Bahuguna**
 
 ⭐ **Star this repo if you found it helpful!**
 
