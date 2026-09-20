@@ -122,7 +122,7 @@ const isDateBlocked = (dateStr) => {
       {/* Reschedule Modal */}
       {rescheduleTarget && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
 
             {/* Modal header */}
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-t-2xl px-6 py-5">
@@ -148,8 +148,10 @@ const isDateBlocked = (dateStr) => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
                 <p className="text-red-700 text-sm">
-                  Current: <span className="font-semibold">{rescheduleTarget.date}</span> at <span className="font-semibold">{rescheduleTarget.time}</span>
-                </p>
+  Current: <span className="font-semibold">
+    {String(rescheduleTarget.date).slice(0, 10)}
+  </span> at <span className="font-semibold">{rescheduleTarget.time}</span>
+</p>
               </div>
 
               {/* New date */}
@@ -176,7 +178,7 @@ const isDateBlocked = (dateStr) => {
     {DAYS_R.map(d => <div key={d} className="text-center text-xs text-gray-400 font-medium py-0.5">{d[0]}</div>)}
   </div>
   {/* Days */}
-  <div className="grid grid-cols-7 gap-0.5">
+  <div className="grid grid-cols-7 gap-1">
     {(() => {
       const days = [];
       const firstDay = getFirstDayR(calYear, calMonth);
@@ -187,7 +189,7 @@ const isDateBlocked = (dateStr) => {
         const isPast  = ds < todayStrR;
         const blocked = isDateBlocked(ds);
         const isSel   = newDate === ds;
-        let cls = "w-full aspect-square flex items-center justify-center rounded-lg text-xs font-medium transition ";
+        let cls = "w-full h-9 flex items-center justify-center rounded-xl text-sm font-semibold transition ";
         if (isPast)   cls += "text-gray-200 cursor-not-allowed ";
         else if (blocked) cls += "bg-red-100 text-red-400 cursor-not-allowed ";
         else if (isSel)   cls += "bg-blue-600 text-white font-bold cursor-pointer ";
