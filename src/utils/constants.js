@@ -20,8 +20,8 @@ export const SIDEBAR_LINKS = {
 	doctor: [
 		{ label: "Dashboard", to: "/doctor/dashboard" },
 		{ label: "Appointments", to: "/doctor/appointments" },
-		{ label: "Prescriptions", to: "/doctor/prescriptions" },  
-		{ label: "Analytics",   to: "/doctor/analytics" },
+		{ label: "Prescriptions", to: "/doctor/prescriptions" },
+		{ label: "Analytics", to: "/doctor/analytics" },
 		{ label: "Availability", to: "/doctor/availability" },
 		{ label: "Reviews", to: "/doctor/reviews" },
 	],

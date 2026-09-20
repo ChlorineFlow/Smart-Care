@@ -10,13 +10,13 @@ export default function PatientLogin() {
   const { patientLogin, patientOtpLogin } = useAuth();
   const otpRefs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef()];
 
-  const [mode, setMode]       = useState(MODE.PASSWORD);
+  const [mode, setMode] = useState(MODE.PASSWORD);
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors]   = useState({});
+  const [errors, setErrors] = useState({});
 
   const [otpEmail, setOtpEmail] = useState("");
-  const [otpDigits, setOtpDigits] = useState(["","","","","",""]);
-  const [form, setForm]         = useState({ email:"", password:"" });
+  const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
+  const [form, setForm] = useState({ email: "", password: "" });
 
   const handleChange = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
@@ -42,7 +42,7 @@ export default function PatientLogin() {
     setLoading(true); setErrors({});
     try {
       const res = await api.sendOtp(otpEmail, "login");
-      
+
       setMode(MODE.OTP_VERIFY);
     } catch (err) { setErrors({ otpEmail: err.message }); }
     finally { setLoading(false); }
@@ -64,13 +64,13 @@ export default function PatientLogin() {
   const handleOtpInput = (val, idx) => {
     if (!/^\d?$/.test(val)) return;
     const next = [...otpDigits]; next[idx] = val; setOtpDigits(next);
-    if (val && idx < 5) otpRefs[idx+1].current?.focus();
-    if (!val && idx > 0) otpRefs[idx-1].current?.focus();
+    if (val && idx < 5) otpRefs[idx + 1].current?.focus();
+    if (!val && idx > 0) otpRefs[idx - 1].current?.focus();
   };
 
   const resendOtp = async () => {
-    setLoading(true); setErrors({}); setOtpDigits(["","","","","",""]);
-    try { const r = await api.sendOtp(otpEmail, "login");  }
+    setLoading(true); setErrors({}); setOtpDigits(["", "", "", "", "", ""]);
+    try { const r = await api.sendOtp(otpEmail, "login"); }
     catch (err) { setErrors({ otp: err.message }); }
     finally { setLoading(false); }
   };
@@ -86,7 +86,7 @@ export default function PatientLogin() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2">
             <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/40">
-              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
             </div>
             <span className="text-xl font-bold text-white tracking-wide">SmartCare</span>
           </div>
@@ -98,11 +98,11 @@ export default function PatientLogin() {
           {mode !== MODE.OTP_VERIFY && (
             <div className="flex bg-white/10 rounded-xl p-1 mb-6">
               <button onClick={() => { setMode(MODE.PASSWORD); setErrors({}); }}
-                className={`flex-1 text-sm font-semibold py-2 rounded-lg transition ${mode===MODE.PASSWORD ? "bg-blue-500 text-white shadow" : "text-blue-300 hover:text-white"}`}>
+                className={`flex-1 text-sm font-semibold py-2 rounded-lg transition ${mode === MODE.PASSWORD ? "bg-blue-500 text-white shadow" : "text-blue-300 hover:text-white"}`}>
                 Password Login
               </button>
               <button onClick={() => { setMode(MODE.OTP_REQUEST); setErrors({}); }}
-                className={`flex-1 text-sm font-semibold py-2 rounded-lg transition ${mode===MODE.OTP_REQUEST ? "bg-blue-500 text-white shadow" : "text-blue-300 hover:text-white"}`}>
+                className={`flex-1 text-sm font-semibold py-2 rounded-lg transition ${mode === MODE.OTP_REQUEST ? "bg-blue-500 text-white shadow" : "text-blue-300 hover:text-white"}`}>
                 Login with OTP
               </button>
             </div>
@@ -161,13 +161,13 @@ export default function PatientLogin() {
             <>
               <div className="text-center mb-6">
                 <div className="w-16 h-16 bg-blue-500/20 border border-blue-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                  <svg className="w-8 h-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                 </div>
                 <h2 className="text-2xl font-bold text-white">Enter OTP</h2>
                 <p className="text-blue-300 text-sm mt-1">Sent to <span className="text-white font-medium">{otpEmail}</span></p>
               </div>
 
-              
+
 
               <form onSubmit={handleOtpLogin} className="space-y-6">
                 <div>
@@ -175,7 +175,7 @@ export default function PatientLogin() {
                     {otpDigits.map((d, i) => (
                       <input key={i} ref={otpRefs[i]} maxLength={1} value={d}
                         onChange={e => handleOtpInput(e.target.value, i)}
-                        onKeyDown={e => e.key==="Backspace" && !d && i>0 && otpRefs[i-1].current?.focus()}
+                        onKeyDown={e => e.key === "Backspace" && !d && i > 0 && otpRefs[i - 1].current?.focus()}
                         className="w-11 h-13 text-center text-xl font-bold bg-white/10 border border-white/20 text-white rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition"
                       />
                     ))}
@@ -190,7 +190,7 @@ export default function PatientLogin() {
                   <p className="text-blue-300 text-sm">Didn't get it?{" "}
                     <button type="button" onClick={resendOtp} disabled={loading} className="text-white font-semibold hover:underline disabled:opacity-50">Resend</button>
                   </p>
-                  <button type="button" onClick={() => { setMode(MODE.OTP_REQUEST); setErrors({}); setOtpDigits(["","","","","",""]); }} className="text-blue-400 text-sm hover:text-blue-300">← Change email</button>
+                  <button type="button" onClick={() => { setMode(MODE.OTP_REQUEST); setErrors({}); setOtpDigits(["", "", "", "", "", ""]); }} className="text-blue-400 text-sm hover:text-blue-300">← Change email</button>
                 </div>
               </form>
             </>

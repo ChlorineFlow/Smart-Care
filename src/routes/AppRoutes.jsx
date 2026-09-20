@@ -25,7 +25,7 @@ import ManageDoctors from "../pages/admin/ManageDoctors";
 import ManageSlots from "../pages/admin/ManageSlots";
 import Analytics from "../pages/admin/Analytics";
 import { useAuth } from "../context/AuthContext";
-import DoctorPrescriptions  from "../pages/doctor/Prescriptions";
+import DoctorPrescriptions from "../pages/doctor/Prescriptions";
 import PatientPrescriptions from "../pages/patient/Prescriptions";
 
 function ProtectedRoute({ role }) {
@@ -83,7 +83,7 @@ export default function AppRoutes() {
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="manage-doctors" element={<ManageDoctors />} />
-            <Route path="manage-patients" element={<ManagePatients />} /> 
+            <Route path="manage-patients" element={<ManagePatients />} />
             <Route path="manage-slots" element={<ManageSlots />} />
             <Route path="analytics" element={<Analytics />} />
           </Route>

@@ -10,12 +10,12 @@ export default function PatientSignup() {
   const { signupPatient } = useAuth();
   const otpRefs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef()];
 
-  const [step, setStep]     = useState(STEPS.FORM);
+  const [step, setStep] = useState(STEPS.FORM);
   const [loading, setLoading] = useState(false);
-  const [otpDigits, setOtpDigits] = useState(["","","","","",""]);
- 
-  const [errors, setErrors]   = useState({});
-  const [form, setForm]       = useState({ name:"", age:"", email:"", phone:"", password:"", confirm:"" });
+  const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
+
+  const [errors, setErrors] = useState({});
+  const [form, setForm] = useState({ name: "", age: "", email: "", phone: "", password: "", confirm: "" });
 
   const handleChange = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
@@ -38,7 +38,7 @@ export default function PatientSignup() {
     setErrors({});
     try {
       const res = await api.sendOtp(form.email, "signup");
-    
+
       setStep(STEPS.OTP);
     } catch (err) {
       setErrors({ form: err.message });
@@ -55,7 +55,7 @@ export default function PatientSignup() {
   };
 
   const handleOtpPaste = (e) => {
-    const pasted = e.clipboardData.getData("text").replace(/\D/g,"").slice(0,6);
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
     if (pasted.length === 6) {
       setOtpDigits(pasted.split(""));
       otpRefs[5].current?.focus();
@@ -79,7 +79,7 @@ export default function PatientSignup() {
   const resendOtp = async () => {
     setLoading(true);
     setErrors({});
-    setOtpDigits(["","","","","",""]);
+    setOtpDigits(["", "", "", "", "", ""]);
     try {
       await api.sendOtp(form.email, "signup");
     } catch (err) { setErrors({ otp: err.message }); }
@@ -94,7 +94,7 @@ export default function PatientSignup() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-3">
             <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/40">
-              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
             </div>
             <span className="text-xl font-bold text-white tracking-wide">SmartCare</span>
           </div>
@@ -138,13 +138,13 @@ export default function PatientSignup() {
             <>
               <div className="mb-6 text-center">
                 <div className="w-16 h-16 bg-blue-500/20 border border-blue-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                  <svg className="w-8 h-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                 </div>
                 <h2 className="text-2xl font-bold text-white">Check your email</h2>
                 <p className="text-blue-300 text-sm mt-1">We sent a 6-digit code to <span className="text-white font-medium">{form.email}</span></p>
               </div>
 
-              
+
 
               <form onSubmit={handleVerifyAndRegister} className="space-y-6">
                 <div>
@@ -153,7 +153,7 @@ export default function PatientSignup() {
                     {otpDigits.map((d, i) => (
                       <input key={i} ref={otpRefs[i]} maxLength={1} value={d}
                         onChange={e => handleOtpInput(e.target.value, i)}
-                        onKeyDown={e => e.key === "Backspace" && !d && i > 0 && otpRefs[i-1].current?.focus()}
+                        onKeyDown={e => e.key === "Backspace" && !d && i > 0 && otpRefs[i - 1].current?.focus()}
                         className="w-12 h-14 text-center text-xl font-bold bg-white/10 border border-white/20 text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                       />
                     ))}
@@ -181,7 +181,7 @@ export default function PatientSignup() {
   );
 }
 
-function Field({ label, name, type="text", placeholder, value, onChange, error, span, half }) {
+function Field({ label, name, type = "text", placeholder, value, onChange, error, span, half }) {
   const cls = span ? "col-span-2" : half ? "col-span-1" : "col-span-2";
   return (
     <div className={cls}>

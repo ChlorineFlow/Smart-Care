@@ -6,13 +6,13 @@ export default function DoctorPrescriptions() {
   const { user } = useAuth();
   const fileRef = useRef();
 
-  const [appointments, setAppointments]   = useState([]);
+  const [appointments, setAppointments] = useState([]);
   const [prescriptions, setPrescriptions] = useState([]);
-  const [selectedAppt, setSelectedAppt]  = useState(null);
-  const [file, setFile]                  = useState(null);
-  const [uploading, setUploading]        = useState(false);
-  const [toast, setToast]                = useState(null);
-  const [search, setSearch]              = useState("");
+  const [selectedAppt, setSelectedAppt] = useState(null);
+  const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [search, setSearch] = useState("");
 
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
@@ -59,10 +59,10 @@ export default function DoctorPrescriptions() {
         try {
           await api.uploadPrescription({
             appointmentId: selectedAppt.id,
-            doctorId:      user.id,
-            patientId:     selectedAppt.patientId,
-            fileName:      file.name,
-            fileData:      e.target.result,
+            doctorId: user.id,
+            patientId: selectedAppt.patientId,
+            fileName: file.name,
+            fileData: e.target.result,
           });
           showToast(`Prescription uploaded for ${selectedAppt.patientName}`);
           setSelectedAppt(null);
@@ -85,8 +85,8 @@ export default function DoctorPrescriptions() {
   const formatSize = (bytes) => {
     if (!bytes) return "—";
     if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes/1024).toFixed(1)} KB`;
-    return `${(bytes/1024/1024).toFixed(1)} MB`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
   };
 
   const filtered = appointments.filter(a =>
@@ -98,10 +98,10 @@ export default function DoctorPrescriptions() {
     <div className="space-y-6">
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-5 right-5 z-50 max-w-sm px-5 py-4 rounded-2xl shadow-2xl flex items-start gap-3 text-white ${toast.type==="error" ? "bg-red-600" : "bg-slate-800"}`}>
+        <div className={`fixed top-5 right-5 z-50 max-w-sm px-5 py-4 rounded-2xl shadow-2xl flex items-start gap-3 text-white ${toast.type === "error" ? "bg-red-600" : "bg-slate-800"}`}>
           {toast.type === "error"
-            ? <svg className="w-5 h-5 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            : <svg className="w-5 h-5 mt-0.5 shrink-0 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            ? <svg className="w-5 h-5 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            : <svg className="w-5 h-5 mt-0.5 shrink-0 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           }
           <p className="text-sm">{toast.msg}</p>
         </div>
@@ -121,7 +121,7 @@ export default function DoctorPrescriptions() {
             <h2 className="font-bold text-gray-800 text-sm">Completed Appointments</h2>
             <input value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Search patient or date…"
-              className="mt-2 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"/>
+              className="mt-2 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
           </div>
 
           <div className="divide-y divide-gray-100 max-h-[500px] overflow-y-auto">
@@ -130,8 +130,8 @@ export default function DoctorPrescriptions() {
                 <p className="text-gray-400 text-sm">No completed appointments yet</p>
               </div>
             ) : filtered.map(appt => {
-              const hasP   = hasPrescription(appt.id);
-              const isSel  = selectedAppt?.id === appt.id;
+              const hasP = hasPrescription(appt.id);
+              const isSel = selectedAppt?.id === appt.id;
               return (
                 <div key={appt.id}
                   onClick={() => { setSelectedAppt(appt); setFile(null); if (fileRef.current) fileRef.current.value = ""; }}
@@ -160,7 +160,7 @@ export default function DoctorPrescriptions() {
           {!selectedAppt ? (
             <div className="bg-white border border-gray-200 rounded-2xl p-10 text-center shadow-sm">
               <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                <svg className="w-7 h-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <svg className="w-7 h-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
               </div>
               <p className="text-gray-500 font-medium text-sm">Select an appointment</p>
               <p className="text-gray-400 text-xs mt-1">Click any completed appointment to upload a prescription</p>
@@ -173,7 +173,7 @@ export default function DoctorPrescriptions() {
                   <h3 className="font-bold text-gray-800">Upload Prescription</h3>
                   <button onClick={() => { setSelectedAppt(null); setFile(null); }}
                     className="text-gray-400 hover:text-gray-600">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                   </button>
                 </div>
 
@@ -186,11 +186,11 @@ export default function DoctorPrescriptions() {
                 <div
                   onClick={() => fileRef.current?.click()}
                   className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition ${file ? "border-emerald-400 bg-emerald-50" : "border-gray-300 hover:border-blue-400 hover:bg-blue-50"}`}>
-                  <input ref={fileRef} type="file" accept=".pdf" onChange={handleFileChange} className="hidden"/>
+                  <input ref={fileRef} type="file" accept=".pdf" onChange={handleFileChange} className="hidden" />
                   {file ? (
                     <>
                       <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                        <svg className="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <svg className="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                       </div>
                       <p className="text-emerald-700 font-semibold text-sm">{file.name}</p>
                       <p className="text-emerald-500 text-xs mt-1">{formatSize(file.size)} · Click to change</p>
@@ -198,7 +198,7 @@ export default function DoctorPrescriptions() {
                   ) : (
                     <>
                       <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                        <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                        <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
                       </div>
                       <p className="text-gray-600 font-semibold text-sm">Click to upload PDF</p>
                       <p className="text-gray-400 text-xs mt-1">PDF only · Max 5MB</p>

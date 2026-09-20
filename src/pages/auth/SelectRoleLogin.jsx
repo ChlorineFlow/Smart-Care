@@ -1,9 +1,9 @@
 import { useNavigate } from "react-router-dom";
 
 const roles = [
-  { title:"Patient", desc:"Access your appointments and health records", icon:"🧑‍⚕️", route:"/patient-login", color:"from-blue-600 to-blue-700", ring:"hover:ring-blue-500/30" },
-  { title:"Doctor", desc:"View your schedule and manage appointments", icon:"👨‍⚕️", route:"/doctor-login", color:"from-emerald-600 to-emerald-700", ring:"hover:ring-emerald-500/30" },
-  { title:"Admin", desc:"Manage the SmartCare administration panel", icon:"🛡️", route:"/admin-login", color:"from-slate-700 to-slate-800", ring:"hover:ring-slate-500/30" },
+  { title: "Patient", desc: "Access your appointments and health records", icon: "🧑‍⚕️", route: "/patient-login", color: "from-blue-600 to-blue-700", ring: "hover:ring-blue-500/30" },
+  { title: "Doctor", desc: "View your schedule and manage appointments", icon: "👨‍⚕️", route: "/doctor-login", color: "from-emerald-600 to-emerald-700", ring: "hover:ring-emerald-500/30" },
+  { title: "Admin", desc: "Manage the SmartCare administration panel", icon: "🛡️", route: "/admin-login", color: "from-slate-700 to-slate-800", ring: "hover:ring-slate-500/30" },
 ];
 
 export default function SelectRoleLogin() {
@@ -30,7 +30,7 @@ export default function SelectRoleLogin() {
               <h3 className="text-xl font-bold text-white mb-2">{role.title}</h3>
               <p className="text-white/50 text-sm leading-relaxed">{role.desc}</p>
               <div className="mt-5 flex items-center gap-1 text-white/40 group-hover:text-white/70 transition text-sm font-medium">
-                Sign in <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+                Sign in <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
               </div>
             </button>
           ))}

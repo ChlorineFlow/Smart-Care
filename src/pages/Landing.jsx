@@ -1,9 +1,9 @@
 import Navbar from "../components/Navbar";
 import { useNavigate } from "react-router-dom";
 export default function Landing() {
-     const navigate = useNavigate();
+  const navigate = useNavigate();
   return (
-    
+
     <div className="bg-gradient-to-b from-blue-50 to-white">
       <Navbar />
 
@@ -30,11 +30,11 @@ export default function Landing() {
           {/* Buttons */}
           <div className="mt-8 flex space-x-4">
             <button
-  onClick={() => navigate("/select-role")}
-  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-lg transition transform hover:scale-105"
->
-  Book Appointment
-</button>
+              onClick={() => navigate("/select-role")}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-lg transition transform hover:scale-105"
+            >
+              Book Appointment
+            </button>
 
             <button
               onClick={() => {

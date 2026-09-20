@@ -4,22 +4,22 @@ import { useAuth } from "../../context/AuthContext";
 import AppointmentCard from "../../components/AppointmentCard";
 
 const pad = (n) => String(n).padStart(2, "0");
-const MONTHS_R = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-const DAYS_R   = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const MONTHS_R = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const DAYS_R = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 function getDaysInMonthR(y, m) { return new Date(y, m + 1, 0).getDate(); }
-function getFirstDayR(y, m)    { return new Date(y, m, 1).getDay(); }
+function getFirstDayR(y, m) { return new Date(y, m, 1).getDay(); }
 
 export default function History() {
   const { user } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [rescheduleTarget, setRescheduleTarget] = useState(null); // appointment being rescheduled
-  const [doctor, setDoctor]   = useState(null);  // doctor details for slot picker
+  const [doctor, setDoctor] = useState(null);  // doctor details for slot picker
   const [newDate, setNewDate] = useState("");
   const [newTime, setNewTime] = useState("");
-  const todayObj  = new Date();
-const todayStrR = `${todayObj.getFullYear()}-${pad(todayObj.getMonth()+1)}-${pad(todayObj.getDate())}`;
-const [calYear,  setCalYear]  = useState(todayObj.getFullYear());
-const [calMonth, setCalMonth] = useState(todayObj.getMonth());
+  const todayObj = new Date();
+  const todayStrR = `${todayObj.getFullYear()}-${pad(todayObj.getMonth() + 1)}-${pad(todayObj.getDate())}`;
+  const [calYear, setCalYear] = useState(todayObj.getFullYear());
+  const [calMonth, setCalMonth] = useState(todayObj.getMonth());
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
 
@@ -35,35 +35,35 @@ const [calMonth, setCalMonth] = useState(todayObj.getMonth());
     await reload();
   };
 
-  const [blockedDates, setBlockedDates]     = useState([]);
-const [recurringBlocked, setRecurringBlocked] = useState([]);
+  const [blockedDates, setBlockedDates] = useState([]);
+  const [recurringBlocked, setRecurringBlocked] = useState([]);
 
-const openReschedule = async (appointment) => {
-  setRescheduleTarget(appointment);
-  setNewDate(appointment.date);
-  setNewTime("");
-  setMessage({ text: "", type: "" });
-  try {
-    const [doc, dates, recurring] = await Promise.all([
-      api.getDoctorById(appointment.doctorId),
-      api.getBlockedDates(appointment.doctorId),
-      api.getRecurringBlocks(appointment.doctorId),
-    ]);
-    setDoctor(doc);
-    setBlockedDates(dates.map(b => b.blockedDate));
-    setRecurringBlocked(recurring.map(r => r.dayOfWeek));
-  } catch {
-    setDoctor(null);
-    setBlockedDates([]);
-    setRecurringBlocked([]);
-  }
-};
+  const openReschedule = async (appointment) => {
+    setRescheduleTarget(appointment);
+    setNewDate(appointment.date);
+    setNewTime("");
+    setMessage({ text: "", type: "" });
+    try {
+      const [doc, dates, recurring] = await Promise.all([
+        api.getDoctorById(appointment.doctorId),
+        api.getBlockedDates(appointment.doctorId),
+        api.getRecurringBlocks(appointment.doctorId),
+      ]);
+      setDoctor(doc);
+      setBlockedDates(dates.map(b => b.blockedDate));
+      setRecurringBlocked(recurring.map(r => r.dayOfWeek));
+    } catch {
+      setDoctor(null);
+      setBlockedDates([]);
+      setRecurringBlocked([]);
+    }
+  };
 
-const isDateBlocked = (dateStr) => {
-  if (blockedDates.includes(dateStr)) return true;
-  const dow = new Date(dateStr + "T00:00:00").getDay();
-  return recurringBlocked.includes(dow);
-};
+  const isDateBlocked = (dateStr) => {
+    if (blockedDates.includes(dateStr)) return true;
+    const dow = new Date(dateStr + "T00:00:00").getDay();
+    return recurringBlocked.includes(dow);
+  };
 
   const handleReschedule = async (e) => {
     e.preventDefault();
@@ -134,7 +134,7 @@ const isDateBlocked = (dateStr) => {
                 <button onClick={() => setRescheduleTarget(null)}
                   className="text-blue-200 hover:text-white transition">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
@@ -145,73 +145,73 @@ const isDateBlocked = (dateStr) => {
               {/* Current slot info */}
               <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center gap-3">
                 <svg className="w-4 h-4 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <p className="text-red-700 text-sm">
-  Current: <span className="font-semibold">
-    {String(rescheduleTarget.date).slice(0, 10)}
-  </span> at <span className="font-semibold">{rescheduleTarget.time}</span>
-</p>
+                  Current: <span className="font-semibold">
+                    {String(rescheduleTarget.date).slice(0, 10)}
+                  </span> at <span className="font-semibold">{rescheduleTarget.time}</span>
+                </p>
               </div>
 
               {/* New date */}
               <div>
                 <label className="text-sm font-semibold text-gray-700 block mb-2">New Date</label>
                 {/* Mini calendar for date selection */}
-<div className="border border-gray-200 rounded-xl p-3">
-  {/* Month nav */}
-  <div className="flex items-center justify-between mb-2">
-    <button type="button"
-      onClick={() => { if (calMonth===0){setCalMonth(11);setCalYear(y=>y-1);} else setCalMonth(m=>m-1); }}
-      className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-gray-100">
-      <svg className="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
-    </button>
-    <span className="text-xs font-bold text-gray-700">{MONTHS_R[calMonth]} {calYear}</span>
-    <button type="button"
-      onClick={() => { if (calMonth===11){setCalMonth(0);setCalYear(y=>y+1);} else setCalMonth(m=>m+1); }}
-      className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-gray-100">
-      <svg className="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
-    </button>
-  </div>
-  {/* Day headers */}
-  <div className="grid grid-cols-7 mb-1">
-    {DAYS_R.map(d => <div key={d} className="text-center text-xs text-gray-400 font-medium py-0.5">{d[0]}</div>)}
-  </div>
-  {/* Days */}
-  <div className="grid grid-cols-7 gap-1">
-    {(() => {
-      const days = [];
-      const firstDay = getFirstDayR(calYear, calMonth);
-      const total    = getDaysInMonthR(calYear, calMonth);
-      for (let i = 0; i < firstDay; i++) days.push(<div key={`e-${i}`}/>);
-      for (let d = 1; d <= total; d++) {
-        const ds      = `${calYear}-${pad(calMonth+1)}-${pad(d)}`;
-        const isPast  = ds < todayStrR;
-        const blocked = isDateBlocked(ds);
-        const isSel   = newDate === ds;
-        let cls = "w-full h-9 flex items-center justify-center rounded-xl text-sm font-semibold transition ";
-        if (isPast)   cls += "text-gray-200 cursor-not-allowed ";
-        else if (blocked) cls += "bg-red-100 text-red-400 cursor-not-allowed ";
-        else if (isSel)   cls += "bg-blue-600 text-white font-bold cursor-pointer ";
-        else              cls += "text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer ";
-        days.push(
-          <button key={ds} type="button" disabled={isPast||blocked}
-            onClick={() => { setNewDate(ds); setNewTime(""); }}
-            className={cls}
-            title={blocked ? "Doctor unavailable" : ""}>
-            {d}
-          </button>
-        );
-      }
-      return days;
-    })()}
-  </div>
-  {/* Legend */}
-  <div className="flex items-center gap-3 mt-2 pt-2 border-t border-gray-100">
-    <span className="flex items-center gap-1 text-xs text-gray-400"><span className="w-3 h-3 rounded bg-red-100 inline-block"/>Unavailable</span>
-    <span className="flex items-center gap-1 text-xs text-gray-400"><span className="w-3 h-3 rounded bg-blue-600 inline-block"/>Selected</span>
-  </div>
-</div>
+                <div className="border border-gray-200 rounded-xl p-3">
+                  {/* Month nav */}
+                  <div className="flex items-center justify-between mb-2">
+                    <button type="button"
+                      onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); } else setCalMonth(m => m - 1); }}
+                      className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-gray-100">
+                      <svg className="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                    </button>
+                    <span className="text-xs font-bold text-gray-700">{MONTHS_R[calMonth]} {calYear}</span>
+                    <button type="button"
+                      onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); } else setCalMonth(m => m + 1); }}
+                      className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-gray-100">
+                      <svg className="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                  </div>
+                  {/* Day headers */}
+                  <div className="grid grid-cols-7 mb-1">
+                    {DAYS_R.map(d => <div key={d} className="text-center text-xs text-gray-400 font-medium py-0.5">{d[0]}</div>)}
+                  </div>
+                  {/* Days */}
+                  <div className="grid grid-cols-7 gap-1">
+                    {(() => {
+                      const days = [];
+                      const firstDay = getFirstDayR(calYear, calMonth);
+                      const total = getDaysInMonthR(calYear, calMonth);
+                      for (let i = 0; i < firstDay; i++) days.push(<div key={`e-${i}`} />);
+                      for (let d = 1; d <= total; d++) {
+                        const ds = `${calYear}-${pad(calMonth + 1)}-${pad(d)}`;
+                        const isPast = ds < todayStrR;
+                        const blocked = isDateBlocked(ds);
+                        const isSel = newDate === ds;
+                        let cls = "w-full h-9 flex items-center justify-center rounded-xl text-sm font-semibold transition ";
+                        if (isPast) cls += "text-gray-200 cursor-not-allowed ";
+                        else if (blocked) cls += "bg-red-100 text-red-400 cursor-not-allowed ";
+                        else if (isSel) cls += "bg-blue-600 text-white font-bold cursor-pointer ";
+                        else cls += "text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer ";
+                        days.push(
+                          <button key={ds} type="button" disabled={isPast || blocked}
+                            onClick={() => { setNewDate(ds); setNewTime(""); }}
+                            className={cls}
+                            title={blocked ? "Doctor unavailable" : ""}>
+                            {d}
+                          </button>
+                        );
+                      }
+                      return days;
+                    })()}
+                  </div>
+                  {/* Legend */}
+                  <div className="flex items-center gap-3 mt-2 pt-2 border-t border-gray-100">
+                    <span className="flex items-center gap-1 text-xs text-gray-400"><span className="w-3 h-3 rounded bg-red-100 inline-block" />Unavailable</span>
+                    <span className="flex items-center gap-1 text-xs text-gray-400"><span className="w-3 h-3 rounded bg-blue-600 inline-block" />Selected</span>
+                  </div>
+                </div>
               </div>
 
               {/* Time slots */}
@@ -221,11 +221,10 @@ const isDateBlocked = (dateStr) => {
                   <div className="flex flex-wrap gap-2">
                     {doctor.slots.map(slot => (
                       <button key={slot} type="button" onClick={() => setNewTime(slot)}
-                        className={`px-4 py-2 rounded-xl text-sm font-medium border transition ${
-                          newTime === slot
-                            ? "bg-blue-600 border-blue-600 text-white shadow"
-                            : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-300"
-                        }`}>
+                        className={`px-4 py-2 rounded-xl text-sm font-medium border transition ${newTime === slot
+                          ? "bg-blue-600 border-blue-600 text-white shadow"
+                          : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-300"
+                          }`}>
                         {slot}
                       </button>
                     ))}
@@ -237,14 +236,13 @@ const isDateBlocked = (dateStr) => {
 
               {/* Message */}
               {message.text && (
-                <div className={`rounded-xl px-4 py-3 text-sm flex items-center gap-2 ${
-                  message.type === "error"
-                    ? "bg-red-50 border border-red-200 text-red-700"
-                    : "bg-green-50 border border-green-200 text-green-700"
-                }`}>
+                <div className={`rounded-xl px-4 py-3 text-sm flex items-center gap-2 ${message.type === "error"
+                  ? "bg-red-50 border border-red-200 text-red-700"
+                  : "bg-green-50 border border-green-200 text-green-700"
+                  }`}>
                   {message.type === "success"
-                    ? <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    : <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    ? <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    : <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   }
                   {message.text}
                 </div>

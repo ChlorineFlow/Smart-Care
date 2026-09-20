@@ -83,10 +83,10 @@ export default function BookAppointment() {
   }, [doctors, searchTerm, specializationFilter, minRatingFilter, slotFilter, sortBy]);
 
   const isBlocked = (dateStr) => {
-  if (blockedDates.includes(dateStr)) return true;
-  const dow = new Date(dateStr + "T00:00:00").getDay();
-  return recurringBlocked.includes(dow);
-};
+    if (blockedDates.includes(dateStr)) return true;
+    const dow = new Date(dateStr + "T00:00:00").getDay();
+    return recurringBlocked.includes(dow);
+  };
 
   // Calendar navigation
   const prevMonth = () => {
@@ -279,8 +279,8 @@ export default function BookAppointment() {
                           {(selectedDoctor?.slots ?? []).map(slot => (
                             <button key={slot} type="button" onClick={() => setTime(slot)}
                               className={`px-4 py-2 rounded-xl text-sm font-medium border transition ${time === slot
-                                  ? "bg-blue-600 border-blue-600 text-white shadow"
-                                  : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-300"
+                                ? "bg-blue-600 border-blue-600 text-white shadow"
+                                : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-300"
                                 }`}>
                               {slot}
                             </button>
@@ -294,8 +294,8 @@ export default function BookAppointment() {
                 {/* Message */}
                 {message.text && (
                   <div className={`rounded-xl px-4 py-3 text-sm flex items-center gap-2 ${message.type === "error"
-                      ? "bg-red-50 border border-red-200 text-red-700"
-                      : "bg-green-50 border border-green-200 text-green-700"
+                    ? "bg-red-50 border border-red-200 text-red-700"
+                    : "bg-green-50 border border-green-200 text-green-700"
                     }`}>
                     {message.type === "success"
                       ? <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>

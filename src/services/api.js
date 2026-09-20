@@ -7,7 +7,7 @@ const request = async (path, options = {}) => {
   });
   if (!response.ok) {
     let message = "Request failed";
-    try { const b = await response.json(); message = b.message || message; } catch {}
+    try { const b = await response.json(); message = b.message || message; } catch { }
     throw new Error(message);
   }
   if (response.status === 204 || response.headers.get("content-length") === "0") return null;
@@ -67,11 +67,11 @@ const api = {
     return request(`/appointments/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
   },
   rescheduleAppointment(id, date, time) {
-  return request(`/appointments/${id}/reschedule`, {
-    method: "PATCH",
-    body: JSON.stringify({ date, time }),
-  });
-},
+    return request(`/appointments/${id}/reschedule`, {
+      method: "PATCH",
+      body: JSON.stringify({ date, time }),
+    });
+  },
 
   // ── RATINGS ──────────────────────────────────────────────────
   submitRating(payload) {
@@ -85,59 +85,59 @@ const api = {
   },
 
   // ── ADMIN ────────────────────────────────────────────────────
-getAdminStats() { return request("/admin/stats"); },
+  getAdminStats() { return request("/admin/stats"); },
 
-getDoctorAnalytics(id) { return request(`/doctors/${id}/analytics`); },
+  getDoctorAnalytics(id) { return request(`/doctors/${id}/analytics`); },
 
-// ── PRESCRIPTIONS ─────────────────────────────────────────────
-uploadPrescription(payload) {
-  return request("/prescriptions", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-},
-getPrescriptions(params = {}) {
-  const q = new URLSearchParams(params).toString();
-  return request(`/prescriptions${q ? "?" + q : ""}`);
-},
-downloadPrescription(id) {
-  return `${API_BASE_URL}/prescriptions/${id}/download`;
-},
+  // ── PRESCRIPTIONS ─────────────────────────────────────────────
+  uploadPrescription(payload) {
+    return request("/prescriptions", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  getPrescriptions(params = {}) {
+    const q = new URLSearchParams(params).toString();
+    return request(`/prescriptions${q ? "?" + q : ""}`);
+  },
+  downloadPrescription(id) {
+    return `${API_BASE_URL}/prescriptions/${id}/download`;
+  },
 
-getBlockedDates(doctorId) {
-  return request(`/doctors/${doctorId}/blocked-dates`);
-},
-getRecurringBlocks(doctorId) {
-  return request(`/doctors/${doctorId}/recurring-blocks`);
-},
-addRecurringBlock(doctorId, dayOfWeek, reason) {
-  return request(`/doctors/${doctorId}/recurring-blocks`, {
-    method: "POST",
-    body: JSON.stringify({ dayOfWeek, reason }),
-  });
-},
-removeRecurringBlock(doctorId, day) {
-  return request(`/doctors/${doctorId}/recurring-blocks/${day}`, {
-    method: "DELETE",
-  });
-},
-blockDate(doctorId, date, reason) {
-  return request(`/doctors/${doctorId}/blocked-dates`, {
-    method: "POST",
-    body: JSON.stringify({ date, reason }),
-  });
-},
-unblockDate(doctorId, date) {
-  return request(`/doctors/${doctorId}/blocked-dates/${date}`, {
-    method: "DELETE",
-  });
-},
+  getBlockedDates(doctorId) {
+    return request(`/doctors/${doctorId}/blocked-dates`);
+  },
+  getRecurringBlocks(doctorId) {
+    return request(`/doctors/${doctorId}/recurring-blocks`);
+  },
+  addRecurringBlock(doctorId, dayOfWeek, reason) {
+    return request(`/doctors/${doctorId}/recurring-blocks`, {
+      method: "POST",
+      body: JSON.stringify({ dayOfWeek, reason }),
+    });
+  },
+  removeRecurringBlock(doctorId, day) {
+    return request(`/doctors/${doctorId}/recurring-blocks/${day}`, {
+      method: "DELETE",
+    });
+  },
+  blockDate(doctorId, date, reason) {
+    return request(`/doctors/${doctorId}/blocked-dates`, {
+      method: "POST",
+      body: JSON.stringify({ date, reason }),
+    });
+  },
+  unblockDate(doctorId, date) {
+    return request(`/doctors/${doctorId}/blocked-dates/${date}`, {
+      method: "DELETE",
+    });
+  },
 
-// ── PATIENTS ─────────────────────────────────────────────────
-getPatients() { return request("/patients"); },
-deletePatient(id) {
-  return request(`/patients/${id}`, { method: "DELETE" });
-},
+  // ── PATIENTS ─────────────────────────────────────────────────
+  getPatients() { return request("/patients"); },
+  deletePatient(id) {
+    return request(`/patients/${id}`, { method: "DELETE" });
+  },
 
 };
 

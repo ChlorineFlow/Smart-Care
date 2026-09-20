@@ -1,9 +1,9 @@
 import { useNavigate } from "react-router-dom";
 
 const roles = [
-  { title:"Patient", desc:"Book appointments and manage your health records", icon:"🧑‍⚕️", route:"/patient-signup", color:"from-blue-600 to-blue-700", ring:"ring-blue-500/30", badge:"New account" },
-  { title:"Doctor", desc:"Your account is set up by the SmartCare admin", icon:"👨‍⚕️", route:"/doctor-login", color:"from-emerald-600 to-emerald-700", ring:"ring-emerald-500/30", badge:"Admin-assigned" },
-  { title:"Admin", desc:"Manage the SmartCare platform and doctor accounts", icon:"🛡️", route:"/admin-login", color:"from-slate-700 to-slate-800", ring:"ring-slate-500/30", badge:"Restricted" },
+  { title: "Patient", desc: "Book appointments and manage your health records", icon: "🧑‍⚕️", route: "/patient-signup", color: "from-blue-600 to-blue-700", ring: "ring-blue-500/30", badge: "New account" },
+  { title: "Doctor", desc: "Your account is set up by the SmartCare admin", icon: "👨‍⚕️", route: "/doctor-login", color: "from-emerald-600 to-emerald-700", ring: "ring-emerald-500/30", badge: "Admin-assigned" },
+  { title: "Admin", desc: "Manage the SmartCare platform and doctor accounts", icon: "🛡️", route: "/admin-login", color: "from-slate-700 to-slate-800", ring: "ring-slate-500/30", badge: "Restricted" },
 ];
 
 export default function SelectRole() {
@@ -31,7 +31,7 @@ export default function SelectRole() {
               <h3 className="text-xl font-bold text-white mb-2">{role.title}</h3>
               <p className="text-white/50 text-sm leading-relaxed">{role.desc}</p>
               <div className="mt-5 flex items-center gap-1 text-white/40 group-hover:text-white/70 transition text-sm font-medium">
-                Continue <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+                Continue <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
               </div>
             </button>
           ))}

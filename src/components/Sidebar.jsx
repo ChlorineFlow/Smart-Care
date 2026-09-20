@@ -33,8 +33,7 @@ export default function Sidebar({ role, links }) {
 						key={link.to}
 						to={link.to}
 						className={({ isActive }) =>
-							`block rounded-lg px-4 py-2 text-sm font-medium transition ${
-								isActive ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100"
+							`block rounded-lg px-4 py-2 text-sm font-medium transition ${isActive ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100"
 							}`
 						}
 					>

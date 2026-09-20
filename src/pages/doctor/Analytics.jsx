@@ -54,9 +54,9 @@ function BarChart({ data, valueKey, labelKey, color = "bg-blue-500", maxLabel })
 
 export default function DoctorAnalytics() {
   const { user } = useAuth();
-  const [data, setData]       = useState(null);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod]   = useState("all"); // all | month | week
+  const [period, setPeriod] = useState("all"); // all | month | week
 
   useEffect(() => {
     if (!user) return;
@@ -99,14 +99,14 @@ export default function DoctorAnalytics() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Total Appointments" value={summary.total}          icon="📋" />
-        <StatCard label="Completed"          value={summary.completed}      icon="✅" color="text-emerald-600" />
-        <StatCard label="Today's Bookings"   value={summary.todayCount}     icon="📅" color="text-blue-600" />
-        <StatCard label="This Week"          value={summary.weekCount}       icon="📆" color="text-purple-600" />
-        <StatCard label="Completion Rate"    value={`${summary.completionRate}%`} icon="🎯" color="text-emerald-600" sub="of all appointments" />
-        <StatCard label="Avg Rating"         value={`⭐ ${summary.avgRating}`} icon="🌟" color="text-amber-500" sub={`${summary.totalReviews} reviews`} />
-        <StatCard label="Booked (Upcoming)"  value={summary.booked}         icon="⏳" color="text-blue-600" />
-        <StatCard label="Cancelled"          value={summary.cancelled}      icon="❌" color="text-red-500" />
+        <StatCard label="Total Appointments" value={summary.total} icon="📋" />
+        <StatCard label="Completed" value={summary.completed} icon="✅" color="text-emerald-600" />
+        <StatCard label="Today's Bookings" value={summary.todayCount} icon="📅" color="text-blue-600" />
+        <StatCard label="This Week" value={summary.weekCount} icon="📆" color="text-purple-600" />
+        <StatCard label="Completion Rate" value={`${summary.completionRate}%`} icon="🎯" color="text-emerald-600" sub="of all appointments" />
+        <StatCard label="Avg Rating" value={`⭐ ${summary.avgRating}`} icon="🌟" color="text-amber-500" sub={`${summary.totalReviews} reviews`} />
+        <StatCard label="Booked (Upcoming)" value={summary.booked} icon="⏳" color="text-blue-600" />
+        <StatCard label="Cancelled" value={summary.cancelled} icon="❌" color="text-red-500" />
       </div>
 
       {/* Status donut + Monthly trend */}
@@ -118,7 +118,7 @@ export default function DoctorAnalytics() {
           <div className="space-y-3">
             {[
               { label: "Completed", value: summary.completed, total: summary.total, color: "bg-emerald-500" },
-              { label: "Booked",    value: summary.booked,    total: summary.total, color: "bg-blue-500" },
+              { label: "Booked", value: summary.booked, total: summary.total, color: "bg-blue-500" },
               { label: "Cancelled", value: summary.cancelled, total: summary.total, color: "bg-red-400" },
             ].map(item => (
               <div key={item.label}>
@@ -167,8 +167,8 @@ export default function DoctorAnalytics() {
                 </div>
               ))}
               <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
-                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-blue-400"/><span className="text-xs text-gray-500">Total</span></div>
-                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-emerald-500"/><span className="text-xs text-gray-500">Completed</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-blue-400" /><span className="text-xs text-gray-500">Total</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-emerald-500" /><span className="text-xs text-gray-500">Completed</span></div>
               </div>
             </div>
           )}
@@ -208,7 +208,7 @@ export default function DoctorAnalytics() {
             </div>
           </div>
           <div className="space-y-2">
-            {[5,4,3,2,1].map(score => {
+            {[5, 4, 3, 2, 1].map(score => {
               const found = ratingDistribution.find(r => r.score === score);
               const count = found?.count || 0;
               return (
@@ -239,14 +239,14 @@ export default function DoctorAnalytics() {
                   <div className="flex items-center justify-between mb-1">
                     <p className="text-sm font-semibold text-gray-800">{r.patientName}</p>
                     <div className="flex gap-0.5">
-                      {[1,2,3,4,5].map(s => (
+                      {[1, 2, 3, 4, 5].map(s => (
                         <span key={s} className={`text-sm ${s <= r.score ? "text-amber-400" : "text-gray-200"}`}>★</span>
                       ))}
                     </div>
                   </div>
                   {r.comment && <p className="text-xs text-gray-500 leading-relaxed">{r.comment}</p>}
                   <p className="text-xs text-gray-300 mt-1">
-                    {new Date(r.createdAt).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" })}
+                    {new Date(r.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                   </p>
                 </div>
               ))}
