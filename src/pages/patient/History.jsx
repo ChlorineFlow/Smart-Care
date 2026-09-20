@@ -121,8 +121,8 @@ const isDateBlocked = (dateStr) => {
 
       {/* Reschedule Modal */}
       {rescheduleTarget && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-50 px-4 py-6 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
 
             {/* Modal header */}
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-t-2xl px-6 py-5">
