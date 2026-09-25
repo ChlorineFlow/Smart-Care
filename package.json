@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "db:schema": "psql $DATABASE_URL -f server/schema.sql",
-    "db:migrate": "node server/migrate.js"
+    "db:migrate": "node server/migrate.js",
+    "test": "node --test"
   },
   "dependencies": {
     "cors": "^2.8.5",
