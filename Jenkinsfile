@@ -19,15 +19,27 @@ pipeline {
                 sh 'npm run build'
             }
         }
+
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    def scannerHome = tool 'SonarScanner'
+
+                    withSonarQubeEnv('SmartCare-SonarQube') {
+                        sh "${scannerHome}/bin/sonar-scanner"
+                    }
+                }
+            }
+        }
     }
 
     post {
         success {
-            echo 'SmartCare CI completed successfully.'
+            echo 'SmartCare CI + SonarQube analysis completed successfully.'
         }
 
         failure {
-            echo 'SmartCare CI failed.'
+            echo 'SmartCare CI + SonarQube analysis failed.'
         }
     }
 }
