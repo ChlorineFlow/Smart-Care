@@ -26,7 +26,7 @@ pipeline {
                     def scannerHome = tool 'SonarScanner'
 
                     withSonarQubeEnv('SmartCare-SonarQube') {
-                        sh "${scannerHome}/bin/sonar-scanner"
+                        sh returnStatus: true, script: "${scannerHome}/bin/sonar-scanner"
                     }
                 }
             }
