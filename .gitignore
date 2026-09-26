@@ -3,3 +3,9 @@ node_modules/
 dist/
 .DS_Store
 *.log
+terraform/smartcare-devops-key.pem
+
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
