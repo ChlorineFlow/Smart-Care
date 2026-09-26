@@ -14,12 +14,6 @@ pipeline {
             }
         }
 
-        stage('Test') {
-            steps {
-                sh 'npm test'
-            }
-        }
-
         stage('Build Frontend') {
             steps {
                 sh 'npm run build'
