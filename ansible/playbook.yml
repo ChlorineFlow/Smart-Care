@@ -1,0 +1,62 @@
+---
+- name: Configure SmartCare DevOps Server
+  hosts: smartcare
+  become: true
+
+  tasks:
+
+    - name: Check Docker version
+      ansible.builtin.command:
+        cmd: docker --version
+      register: docker_version
+      changed_when: false
+
+    - name: Display Docker version
+      ansible.builtin.debug:
+        msg: "{{ docker_version.stdout }}"
+
+    - name: Check Node.js version
+      ansible.builtin.command:
+        cmd: node --version
+      register: node_version
+      changed_when: false
+
+    - name: Display Node.js version
+      ansible.builtin.debug:
+        msg: "{{ node_version.stdout }}"
+
+    - name: Ensure K3s is enabled and running
+      ansible.builtin.systemd:
+        name: k3s
+        enabled: true
+        state: started
+
+    - name: Check K3s service
+      ansible.builtin.command:
+        cmd: systemctl is-active k3s
+      register: k3s_status
+      changed_when: false
+
+    - name: Display K3s status
+      ansible.builtin.debug:
+        msg: "K3s status: {{ k3s_status.stdout }}"
+
+    - name: Check Jenkins service
+      ansible.builtin.command:
+        cmd: systemctl is-active jenkins
+      register: jenkins_status
+      changed_when: false
+
+    - name: Display Jenkins status
+      ansible.builtin.debug:
+        msg: "Jenkins status: {{ jenkins_status.stdout }}"
+
+    - name: Check SmartCare Kubernetes pods
+      ansible.builtin.command:
+        cmd: kubectl get pods -n smartcare
+      register: smartcare_pods
+      changed_when: false
+
+    - name: Display SmartCare pods
+      ansible.builtin.debug:
+        msg: "{{ smartcare_pods.stdout }}"

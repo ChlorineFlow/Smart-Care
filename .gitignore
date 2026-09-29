@@ -9,3 +9,4 @@ terraform/smartcare-devops-key.pem
 terraform/.terraform/
 terraform/*.tfstate
 terraform/*.tfstate.*
+ansible/inventory.ini
