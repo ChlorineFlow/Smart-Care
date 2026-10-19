@@ -20,17 +20,19 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                script {
-                    def scannerHome = tool 'SonarScanner'
+        
+stage('SonarQube Cloud Analysis') {
+    steps {
+        script {
+            def scannerHome = tool 'SonarScanner'
 
-                    withSonarQubeEnv('SmartCare-SonarQube') {
-                        sh returnStatus: true, script: "${scannerHome}/bin/sonar-scanner"
-                    }
-                }
+            withSonarQubeEnv('SmartCare-SonarCloud') {
+                sh "${scannerHome}/bin/sonar-scanner"
             }
         }
+    }
+}
+
     }
 
     post {
