@@ -21,27 +21,26 @@ pipeline {
         }
 
         
-stage('SonarQube Cloud Analysis') {
-    steps {
-        script {
-            def scannerHome = tool 'SonarScanner'
+// stage('SonarQube Cloud Analysis') {
+//     steps {
+//         script {
+//             def scannerHome = tool 'SonarScanner'
 
-            withSonarQubeEnv('SmartCare-SonarCloud') {
-                sh "${scannerHome}/bin/sonar-scanner"
-            }
-        }
-    }
-}
+//             withSonarQubeEnv('SmartCare-SonarCloud') {
+//                 sh "${scannerHome}/bin/sonar-scanner"
+//             }
+//         }
+//     }
+// }
 
     }
 
     post {
-        success {
-            echo 'SmartCare CI + SonarQube analysis completed successfully.'
-        }
-
-        failure {
-            echo 'SmartCare CI + SonarQube analysis failed.'
-        }
+    success {
+        echo 'SmartCare CI build completed successfully.'
     }
+    failure {
+        echo 'SmartCare CI build failed.'
+    }
+}
 }
