@@ -1,3 +1,4 @@
+
 terraform {
   required_providers {
     aws = {
@@ -13,25 +14,15 @@ provider "aws" {
   region = "ap-south-1"
 }
 
-data "aws_ami" "ubuntu" {
-  most_recent = true
+variable "ssh_allowed_cidr" {
+  description = "Authorized SSH IPv4 address in CIDR notation"
+  type        = string
+}
 
-  owners = ["099720109477"]
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
+variable "existing_ami_id" {
+  description = "AMI ID of the existing SmartCare EC2 instance"
+  type        = string
+  default     = "ami-007b1f3fdea0383d9"
 }
 
 data "aws_vpc" "default" {
@@ -44,11 +35,11 @@ resource "aws_security_group" "smartcare" {
   vpc_id      = data.aws_vpc.default.id
 
   ingress {
-    description = "SSH"
+    description = "SSH from authorized IP"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.ssh_allowed_cidr]
   }
 
   ingress {
@@ -67,6 +58,22 @@ resource "aws_security_group" "smartcare" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    description = "Jenkins - authorized IP"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["104.28.225.14/32"]
+  }
+
+  ingress {
+    description = "Port 9000 - existing authorized IP"
+    from_port   = 9000
+    to_port     = 9000
+    protocol    = "tcp"
+    cidr_blocks = ["49.14.137.139/32"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -80,10 +87,10 @@ resource "aws_security_group" "smartcare" {
 }
 
 resource "aws_instance" "smartcare" {
-  ami           = data.aws_ami.ubuntu.id
-  instance_type = "t3.small"
-
-  key_name = "smartcare-devops-key"
+  ami                         = var.existing_ami_id
+  instance_type               = "t3.small"
+  key_name                    = "smartcare-devops-key"
+  associate_public_ip_address = true
 
   vpc_security_group_ids = [
     aws_security_group.smartcare.id
@@ -96,5 +103,9 @@ resource "aws_instance" "smartcare" {
 
   tags = {
     Name = "smartcare-devops-server"
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
