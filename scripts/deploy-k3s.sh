@@ -1,3 +1,4 @@
+
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
@@ -19,7 +20,10 @@ if [[ ! "$COMMIT_SHA" =~ ^[0-9a-f]{40}$ ]]; then
 fi
 
 for command in kubectl curl; do
-  command -v "$command" >/dev/null || { echo "Missing required command: $command" >&2; exit 1; }
+  command -v "$command" >/dev/null || {
+    echo "Missing required command: $command" >&2
+    exit 1
+  }
 done
 
 get_container_image() {
@@ -34,13 +38,16 @@ kubectl get "service/$FRONTEND_SERVICE" --namespace="$K8S_NAMESPACE" >/dev/null
 
 PREVIOUS_BACKEND_IMAGE="$(get_container_image "$BACKEND_DEPLOYMENT" "$BACKEND_CONTAINER")"
 PREVIOUS_FRONTEND_IMAGE="$(get_container_image "$FRONTEND_DEPLOYMENT" "$FRONTEND_CONTAINER")"
+
 if [[ -z "$PREVIOUS_BACKEND_IMAGE" || -z "$PREVIOUS_FRONTEND_IMAGE" ]]; then
   echo "Could not find the configured containers in the existing Deployments; no resources were changed." >&2
   exit 1
 fi
 
-NEW_BACKEND_IMAGE="$IMAGE_PREFIX-backend:sha-$COMMIT_SHA"
-NEW_FRONTEND_IMAGE="$IMAGE_PREFIX-frontend:sha-$COMMIT_SHA"
+# These tags must match the tags built and pushed by Jenkinsfile.
+NEW_BACKEND_IMAGE="$IMAGE_PREFIX-backend:$COMMIT_SHA"
+NEW_FRONTEND_IMAGE="$IMAGE_PREFIX-frontend:$COMMIT_SHA"
+
 DEPLOYMENT_STARTED=0
 BACKEND_FORWARD_PID=""
 FRONTEND_FORWARD_PID=""
@@ -51,54 +58,75 @@ FRONTEND_BODY="$(mktemp)"
 cleanup() {
   status=$?
   set +e
+
   [[ -n "$BACKEND_FORWARD_PID" ]] && kill "$BACKEND_FORWARD_PID" 2>/dev/null
   [[ -n "$FRONTEND_FORWARD_PID" ]] && kill "$FRONTEND_FORWARD_PID" 2>/dev/null
+
   if [[ $status -ne 0 && $DEPLOYMENT_STARTED -eq 1 ]]; then
     echo "Deployment failed; restoring the previous container images." >&2
+
     kubectl set image "deployment/$BACKEND_DEPLOYMENT" \
       "$BACKEND_CONTAINER=$PREVIOUS_BACKEND_IMAGE" --namespace="$K8S_NAMESPACE"
+
     kubectl set image "deployment/$FRONTEND_DEPLOYMENT" \
       "$FRONTEND_CONTAINER=$PREVIOUS_FRONTEND_IMAGE" --namespace="$K8S_NAMESPACE"
-    kubectl rollout status "deployment/$BACKEND_DEPLOYMENT" --namespace="$K8S_NAMESPACE" --timeout=180s
-    kubectl rollout status "deployment/$FRONTEND_DEPLOYMENT" --namespace="$K8S_NAMESPACE" --timeout=180s
+
+    kubectl rollout status "deployment/$BACKEND_DEPLOYMENT" \
+      --namespace="$K8S_NAMESPACE" --timeout=180s
+
+    kubectl rollout status "deployment/$FRONTEND_DEPLOYMENT" \
+      --namespace="$K8S_NAMESPACE" --timeout=180s
   fi
+
   rm -f "$BACKEND_LOG" "$FRONTEND_LOG" "$FRONTEND_BODY"
   exit "$status"
 }
+
 trap cleanup EXIT
 
 DEPLOYMENT_STARTED=1
+
 kubectl set image "deployment/$BACKEND_DEPLOYMENT" \
   "$BACKEND_CONTAINER=$NEW_BACKEND_IMAGE" --namespace="$K8S_NAMESPACE"
+
 kubectl set image "deployment/$FRONTEND_DEPLOYMENT" \
   "$FRONTEND_CONTAINER=$NEW_FRONTEND_IMAGE" --namespace="$K8S_NAMESPACE"
-kubectl rollout status "deployment/$BACKEND_DEPLOYMENT" --namespace="$K8S_NAMESPACE" --timeout=180s
-kubectl rollout status "deployment/$FRONTEND_DEPLOYMENT" --namespace="$K8S_NAMESPACE" --timeout=180s
+
+kubectl rollout status "deployment/$BACKEND_DEPLOYMENT" \
+  --namespace="$K8S_NAMESPACE" --timeout=180s
+
+kubectl rollout status "deployment/$FRONTEND_DEPLOYMENT" \
+  --namespace="$K8S_NAMESPACE" --timeout=180s
 
 kubectl port-forward --address 127.0.0.1 \
   "service/$BACKEND_SERVICE" "14000:$BACKEND_SERVICE_PORT" \
   --namespace="$K8S_NAMESPACE" >"$BACKEND_LOG" 2>&1 &
 BACKEND_FORWARD_PID=$!
+
 kubectl port-forward --address 127.0.0.1 \
   "service/$FRONTEND_SERVICE" "18080:$FRONTEND_SERVICE_PORT" \
   --namespace="$K8S_NAMESPACE" >"$FRONTEND_LOG" 2>&1 &
 FRONTEND_FORWARD_PID=$!
 
 READY=0
+
 for attempt in $(seq 1 30); do
   if curl --fail --silent --output "$FRONTEND_BODY" http://127.0.0.1:18080/ \
     && curl --fail --silent http://127.0.0.1:14000/api/health >/dev/null; then
     READY=1
     break
   fi
+
   if ! kill -0 "$BACKEND_FORWARD_PID" 2>/dev/null; then
     cat "$BACKEND_LOG" >&2
     exit 1
   fi
+
   if ! kill -0 "$FRONTEND_FORWARD_PID" 2>/dev/null; then
     cat "$FRONTEND_LOG" >&2
     exit 1
   fi
+
   sleep 2
 done
 
@@ -109,4 +137,5 @@ if [[ $READY -ne 1 ]]; then
 fi
 
 DEPLOYMENT_STARTED=0
+
 echo "Commit $COMMIT_SHA deployed. Existing Services and persistent data were not modified; frontend and API smoke tests passed."
