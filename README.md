@@ -395,6 +395,18 @@ SMTP_FROM=SmartCare <your_gmail@gmail.com>
 
 ## ☁️ Deployment
 
+### SmartCare cloud demo
+
+The `smartcare-cloud.bat` helper uses AWS Systems Manager (SSM), so Jenkins does not need an inbound port 8080 rule and access does not depend on your public IP.
+
+1. Apply the Terraform configuration in `terraform/` to attach the SSM instance role and remove the SSH/Jenkins ingress rules. Review the plan before applying.
+2. Ensure the EC2 instance has the SSM Agent installed and can reach AWS Systems Manager over outbound HTTPS. The AWS CLI account also needs permission to start the instance, run SSM commands, and start SSM sessions.
+3. Run `smartcare-cloud.bat` to start the instance and its services.
+4. Run `smartcare-cloud.bat connect` in a separate Command Prompt and keep it open. Browse to `http://localhost:8080` and sign in to Jenkins.
+5. Run `smartcare-cloud.bat stop` after the demo to stop EC2 billing.
+
+Install the AWS Session Manager plugin if `aws ssm start-session` reports that it is missing. SSM port forwarding requires no inbound SSH or Jenkins rules; do not expose Jenkins to `0.0.0.0/0`.
+
 ### AWS Architecture
 ```
 Users → CloudFront (HTTPS) → S3 (React Build)

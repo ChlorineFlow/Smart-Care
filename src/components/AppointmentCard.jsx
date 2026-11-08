@@ -1,5 +1,5 @@
 const statusClasses = {
-  booked:    "bg-blue-100 text-blue-700",
+  booked: "bg-blue-100 text-blue-700",
   completed: "bg-green-100 text-green-700",
   cancelled: "bg-red-100 text-red-700",
 };
@@ -9,8 +9,8 @@ export default function AppointmentCard({
   onCancel,
   onComplete,
   onReschedule,
-  canCancel    = false,
-  canComplete  = false,
+  canCancel = false,
+  canComplete = false,
   canReschedule = false,
 }) {
   const badgeClass = statusClasses[appointment.status] ?? "bg-gray-100 text-gray-700";
