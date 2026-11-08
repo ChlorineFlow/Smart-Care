@@ -13,13 +13,6 @@ function getDaysInMonth(year, month) { return new Date(year, month + 1, 0).getDa
 function getFirstDayOfMonth(year, month) { return new Date(year, month, 1).getDay(); }
 const pad = (n) => String(n).padStart(2, "0");
 
-function displayDate(dateStr) {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString("en-IN", {
-    weekday: "long", day: "numeric", month: "long", year: "numeric",
-  });
-}
-
 function displayDateShort(dateStr) {
   const [y, m, d] = dateStr.split("-").map(Number);
   return new Date(y, m - 1, d).toLocaleDateString("en-IN", {
@@ -58,7 +51,9 @@ export default function DoctorAvailability() {
       setBlocked(data);
       setRecurringBlocks(recurring);
       return data;
-    } catch { }
+    } catch (err) {
+      console.error(err);
+    }
     return [];
   };
 

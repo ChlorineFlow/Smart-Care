@@ -27,7 +27,6 @@ export default function BookAppointment() {
   const [searchTerm, setSearchTerm] = useState("");
   const [specializationFilter, setSpecializationFilter] = useState("all");
   const [minRatingFilter, setMinRatingFilter] = useState("0");
-  const [slotFilter, setSlotFilter] = useState("all");
   const [sortBy, setSortBy] = useState("rating_desc");
 
   useEffect(() => {
@@ -59,10 +58,6 @@ export default function BookAppointment() {
     Array.from(new Set(doctors.map(d => String(d.specialization || "").trim()).filter(Boolean))).sort(),
     [doctors]);
 
-  const slotOptions = useMemo(() =>
-    Array.from(new Set(doctors.flatMap(d => (d.slots ?? []).map(s => String(s).trim()).filter(Boolean)))).sort(),
-    [doctors]);
-
   const filteredDoctors = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
     const minRating = Number(minRatingFilter);
@@ -71,8 +66,7 @@ export default function BookAppointment() {
       const spec = String(d.specialization || "").toLowerCase();
       return (!q || name.includes(q) || spec.includes(q))
         && (specializationFilter === "all" || d.specialization === specializationFilter)
-        && Number(d.rating || 0) >= minRating
-        && (slotFilter === "all" || (d.slots ?? []).includes(slotFilter));
+        && Number(d.rating || 0) >= minRating;
     });
     return list.sort((a, b) => {
       if (sortBy === "rating_desc") return (b.rating || 0) - (a.rating || 0);
@@ -80,7 +74,7 @@ export default function BookAppointment() {
       if (sortBy === "reviews_desc") return (b.reviews || 0) - (a.reviews || 0);
       return String(a.name || "").localeCompare(String(b.name || ""));
     });
-  }, [doctors, searchTerm, specializationFilter, minRatingFilter, slotFilter, sortBy]);
+  }, [doctors, searchTerm, specializationFilter, minRatingFilter, sortBy]);
 
   const isBlocked = (dateStr) => {
     if (blockedDates.includes(dateStr)) return true;

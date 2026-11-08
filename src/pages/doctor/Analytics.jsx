@@ -29,7 +29,7 @@ function StatCard({ label, value, sub, color = "text-gray-900", icon }) {
   );
 }
 
-function BarChart({ data, valueKey, labelKey, color = "bg-blue-500", maxLabel }) {
+function BarChart({ data, valueKey, labelKey, color = "bg-blue-500" }) {
   const max = Math.max(...data.map(d => d[valueKey]), 1);
   return (
     <div className="space-y-2">
@@ -56,8 +56,6 @@ export default function DoctorAnalytics() {
   const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState("all"); // all | month | week
-
   useEffect(() => {
     if (!user) return;
     let mounted = true;

@@ -7,7 +7,8 @@ const request = async (path, options = {}) => {
   });
   if (!response.ok) {
     let message = "Request failed";
-    try { const b = await response.json(); message = b.message || message; } catch { }
+    const body = await response.json().catch(() => null);
+    message = body?.message || message;
     throw new Error(message);
   }
   if (response.status === 204 || response.headers.get("content-length") === "0") return null;

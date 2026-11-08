@@ -123,7 +123,7 @@ The platform includes automated email notifications for OTPs, appointment cancel
 | **Auth** | OTP via Gmail SMTP, Role-based access control, Session storage |
 | **Email** | Nodemailer + Gmail SMTP |
 | **Scheduler** | node-cron (hourly reminder job) |
-| **DevOps** | Git, GitHub, GitHub Actions CI/CD, Dockerfile, PM2 |
+| **DevOps** | Git, GitHub Actions CI/CD, Docker, K3s, AWS Systems Manager |
 | **Deployment** | AWS EC2, AWS RDS, AWS S3, AWS CloudFront |
 
 ---
@@ -409,28 +409,37 @@ Install the AWS Session Manager plugin if `aws ssm start-session` reports that i
 
 ### AWS Architecture
 ```
-Users → CloudFront (HTTPS) → S3 (React Build)
-Users → EC2 t2.micro (Node.js + Express + PM2)
-EC2   → RDS PostgreSQL 16 (db.t3.micro)
-GitHub → GitHub Actions → SSH → EC2 (auto deploy)
+Users → EC2 HTTP :80 → K3s LoadBalancer → Nginx frontend
+Nginx → K3s ClusterIP service → Express API
+Express API → PostgreSQL configured in the Jenkins app environment secret
+GitHub push → GitHub Actions → lint/test → SonarCloud → GHCR → AWS SSM → K3s on EC2
 ```
 
-### AWS Services Used (Free Tier)
-| Service | Purpose | Free Tier |
-|---------|---------|-----------|
-| EC2 t2.micro | Node.js backend | 750 hrs/month |
-| RDS db.t3.micro | PostgreSQL database | 750 hrs/month + 20GB |
-| S3 | React frontend build | 5GB storage |
-| CloudFront | HTTPS CDN | 1TB transfer/month |
-| GitHub Actions | CI/CD pipeline | 2000 mins/month |
+### Deployment Components
+| Service | Purpose |
+|---------|---------|
+| EC2 | Hosts the K3s cluster and optional Jenkins UI |
+| K3s | Runs the frontend and backend workloads |
+| GitHub Container Registry | Stores immutable commit-tagged images |
+| SonarCloud | Static analysis and quality gate |
+| PostgreSQL | Application database; runtime settings are stored on EC2 |
 
-### CI/CD Pipeline
-Every push to `main` automatically:
-1. Triggers GitHub Actions workflow
-2. SSHs into EC2 instance
-3. Pulls latest code
-4. Runs `npm install`
-5. Restarts app with PM2
+### Push-triggered GitHub Actions deployment
+
+Every branch push runs the lint, production build, and API test. A push to `main` additionally waits for the SonarCloud quality gate, builds and publishes commit-tagged and `latest` frontend/backend images to GHCR, and deploys to K3s over AWS Systems Manager when EC2 is running. If EC2 is stopped, images are still published; `smartcare-cloud.bat` deploys the latest images after it starts the instance. Jenkins is optional and is not a second deployment controller.
+
+Saving a file in VS Code does not push it. Commit the changes and run `git push origin main`; that push starts the workflow.
+
+Complete these one-time settings:
+
+1. In `terraform/`, run `terraform init`, review `terraform plan`, then apply the reviewed IAM OIDC additions. If this AWS account already has the GitHub Actions OIDC provider, import it into Terraform instead of creating a duplicate. Read the output with `terraform output -raw github_actions_deploy_role_arn`.
+2. In GitHub, open **Settings → Secrets and variables → Actions**. Add the Terraform output as repository variable `AWS_DEPLOY_ROLE_ARN`; add the SonarCloud token as repository secret `SONAR_TOKEN`. No AWS access key is needed because Actions uses OIDC.
+3. After the first successful image publish, set both `smart-care-backend` and `smart-care-frontend` GHCR packages to **public**. K3s then pulls images without a long-lived registry password.
+4. On EC2, create `/etc/smartcare/app.env` with the production `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_SSL`, and any required SMTP settings. Keep the file off GitHub and restrict it with `sudo install -d -m 700 /etc/smartcare`, then `sudo chmod 600 /etc/smartcare/app.env`. The database must be reachable from the EC2/K3s network.
+5. Ensure the EC2 instance has the SSM instance profile, SSM Agent, Docker, and K3s; the security group must allow HTTP port 80. Configure the instance's `smartcare-devops-server` Name tag as used by the workflow.
+6. Push a commit to `main`. For a stopped instance, run `smartcare-cloud.bat`; it starts services, syncs deployment manifests, and deploys `latest`. The site is served on the EC2 HTTP address.
+
+The repository-side workflow is `.github/workflows/ci-cd.yml`. I cannot create the GitHub variable/secret or apply Terraform from the code workspace; those require your GitHub/AWS account access. The workflow and setup are ready for those one-time account settings.
 
 ### Docker
 ```bash

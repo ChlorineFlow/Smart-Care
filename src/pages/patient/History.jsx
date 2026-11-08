@@ -92,9 +92,6 @@ export default function History() {
     }
   };
 
-  // Min date = today
-  const today = new Date().toISOString().split("T")[0];
-
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900">Appointment History</h1>

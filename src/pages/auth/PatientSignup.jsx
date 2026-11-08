@@ -37,7 +37,7 @@ export default function PatientSignup() {
     setLoading(true);
     setErrors({});
     try {
-      const res = await api.sendOtp(form.email, "signup");
+      await api.sendOtp(form.email, "signup");
 
       setStep(STEPS.OTP);
     } catch (err) {

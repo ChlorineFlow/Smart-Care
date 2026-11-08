@@ -34,7 +34,7 @@ export default function ManageDoctors() {
   };
 
   const load = async () => {
-    try { setDoctors(await api.getAllDoctors()); } catch { }
+    try { setDoctors(await api.getAllDoctors()); } catch (err) { console.error(err); }
   };
   useEffect(() => { load(); }, []);
 

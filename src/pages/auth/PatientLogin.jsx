@@ -41,7 +41,7 @@ export default function PatientLogin() {
     if (!/\S+@\S+\.\S+/.test(otpEmail)) { setErrors({ otpEmail: "Enter a valid email" }); return; }
     setLoading(true); setErrors({});
     try {
-      const res = await api.sendOtp(otpEmail, "login");
+      await api.sendOtp(otpEmail, "login");
 
       setMode(MODE.OTP_VERIFY);
     } catch (err) { setErrors({ otpEmail: err.message }); }
@@ -70,7 +70,7 @@ export default function PatientLogin() {
 
   const resendOtp = async () => {
     setLoading(true); setErrors({}); setOtpDigits(["", "", "", "", "", ""]);
-    try { const r = await api.sendOtp(otpEmail, "login"); }
+    try { await api.sendOtp(otpEmail, "login"); }
     catch (err) { setErrors({ otp: err.message }); }
     finally { setLoading(false); }
   };

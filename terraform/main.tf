@@ -14,6 +14,8 @@ provider "aws" {
   region = "ap-south-1"
 }
 
+data "aws_caller_identity" "current" {}
+
 variable "existing_ami_id" {
   description = "AMI ID of the existing SmartCare EC2 instance"
   type        = string
@@ -49,6 +51,61 @@ resource "aws_iam_role_policy_attachment" "smartcare_ssm" {
 resource "aws_iam_instance_profile" "smartcare_ssm" {
   name = "smartcare-devops-ssm-profile"
   role = aws_iam_role.smartcare_ssm.name
+}
+
+resource "aws_iam_openid_connect_provider" "github_actions" {
+  url            = "https://token.actions.githubusercontent.com"
+  client_id_list = ["sts.amazonaws.com"]
+}
+
+resource "aws_iam_role" "github_actions_deploy" {
+  name = "smartcare-github-actions-deploy"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Federated = aws_iam_openid_connect_provider.github_actions.arn
+      }
+      Action = "sts:AssumeRoleWithWebIdentity"
+      Condition = {
+        StringEquals = {
+          "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+          "token.actions.githubusercontent.com:sub" = "repo:ChlorineFlow/Smart-Care:ref:refs/heads/main"
+        }
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "github_actions_deploy" {
+  name = "smartcare-github-actions-ssm-deploy"
+  role = aws_iam_role.github_actions_deploy.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["ec2:DescribeInstances"]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = ["ssm:SendCommand"]
+        Resource = [
+          "arn:aws:ssm:ap-south-1::document/AWS-RunShellScript",
+          "arn:aws:ec2:ap-south-1:${data.aws_caller_identity.current.account_id}:instance/${aws_instance.smartcare.id}"
+        ]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["ssm:GetCommandInvocation", "ssm:ListCommandInvocations"]
+        Resource = "*"
+      }
+    ]
+  })
 }
 
 data "aws_vpc" "default" {
@@ -123,4 +180,9 @@ resource "aws_instance" "smartcare" {
   lifecycle {
     prevent_destroy = true
   }
+}
+
+output "github_actions_deploy_role_arn" {
+  description = "Set this as the GitHub Actions repository variable AWS_DEPLOY_ROLE_ARN"
+  value       = aws_iam_role.github_actions_deploy.arn
 }

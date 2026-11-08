@@ -48,8 +48,8 @@ timeout /t 10 /nobreak >nul
 goto wait_ssm
 
 :start_services
-echo Starting Docker, K3s, Jenkins, and the API through SSM ...
-for /f "delims=" %%i in ('aws ssm send-command --region %SC_REGION% --instance-ids %ID% --document-name AWS-RunShellScript --parameters "commands=['sudo systemctl start docker k3s jenkins && sudo k3s kubectl get pods -n smartcare && if sudo -iu ubuntu command -v pm2 ^>nul; then (sudo -iu ubuntu pm2 list | grep -q smartcare-api || sudo -iu ubuntu pm2 resurrect) && sudo -iu ubuntu pm2 list; else echo WARNING: PM2-not-found-API-not-restarted; fi']" --query "Command.CommandId" --output text') do set COMMAND_ID=%%i
+echo Starting Docker, K3s, and Jenkins, then deploying the latest published app through SSM ...
+for /f "delims=" %%i in ('aws ssm send-command --region %SC_REGION% --instance-ids %ID% --document-name AWS-RunShellScript --parameters "commands=['sudo systemctl start docker k3s jenkins && sudo install -d -o ubuntu -g ubuntu /opt/smartcare-deploy && if [ ! -d /opt/smartcare-deploy/.git ]; then sudo -u ubuntu git clone --depth 1 --branch main https://github.com/ChlorineFlow/Smart-Care.git /opt/smartcare-deploy; else sudo -u ubuntu git -C /opt/smartcare-deploy fetch origin main && sudo -u ubuntu git -C /opt/smartcare-deploy checkout -B main origin/main; fi && sudo bash /opt/smartcare-deploy/scripts/deploy-k3s.sh latest']" --query "Command.CommandId" --output text') do set COMMAND_ID=%%i
 if not defined COMMAND_ID (echo Failed to send the SSM command. Check your AWS SSM permissions and instance status. & exit /b 1)
 if "%COMMAND_ID%"=="None" (echo Failed to send the SSM command. Check your AWS SSM permissions and instance status. & exit /b 1)
 aws ssm wait command-executed --region %SC_REGION% --command-id %COMMAND_ID% --instance-id %ID%
@@ -63,6 +63,7 @@ if errorlevel 1 exit /b 1
 echo.
 echo Jenkins is available independent of your public IP through an SSM tunnel.
 echo Run smartcare-cloud.bat connect, then open http://localhost:8080
+echo SmartCare deployment status is shown above; the website is served on the EC2 HTTP address.
 echo.
 echo GitHub Actions, SonarCloud and Gmail SMTP are hosted services: nothing to start.
 exit /b 0
