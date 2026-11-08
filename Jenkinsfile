@@ -7,10 +7,10 @@ pipeline {
         string(name: 'COMMIT_SHA', defaultValue: '', description: 'Full commit SHA that passed GitHub Actions and SonarCloud')
         string(name: 'K8S_NAMESPACE', defaultValue: 'smartcare', description: 'Existing application namespace')
         string(name: 'BACKEND_DEPLOYMENT', defaultValue: 'smartcare-backend', description: 'Existing backend Deployment')
-        string(name: 'BACKEND_CONTAINER', defaultValue: 'smartcare-backend', description: 'Backend container in the existing Deployment')
+        string(name: 'BACKEND_CONTAINER', defaultValue: 'backend', description: 'Backend container in the existing Deployment')
         string(name: 'BACKEND_SERVICE', defaultValue: 'smartcare-backend', description: 'Existing backend Service used for smoke tests')
         string(name: 'FRONTEND_DEPLOYMENT', defaultValue: 'smartcare-frontend', description: 'Existing frontend Deployment')
-        string(name: 'FRONTEND_CONTAINER', defaultValue: 'smartcare-frontend', description: 'Frontend container in the existing Deployment')
+        string(name: 'FRONTEND_CONTAINER', defaultValue: 'frontend', description: 'Frontend container in the existing Deployment')
         string(name: 'FRONTEND_SERVICE', defaultValue: 'smartcare-frontend', description: 'Existing frontend Service used for smoke tests')
     }
 
