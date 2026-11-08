@@ -5,10 +5,57 @@
 
   tasks:
 
+    - name: Install host tools required for SSM to Jenkins handoff
+      ansible.builtin.package:
+        name:
+          - curl
+          - jq
+        state: present
+
+    - name: Ensure Docker starts with the instance
+      ansible.builtin.systemd:
+        name: docker
+        enabled: true
+        state: started
+
+    - name: Ensure Jenkins starts with the instance
+      ansible.builtin.systemd:
+        name: jenkins
+        enabled: true
+        state: started
+
+    - name: Install private Jenkins trigger helper
+      ansible.builtin.copy:
+        src: files/smartcare-trigger-jenkins.sh
+        dest: /usr/local/sbin/smartcare-trigger-jenkins
+        owner: root
+        group: root
+        mode: "0750"
+
+    - name: Check that the root-only Jenkins trigger configuration exists
+      ansible.builtin.stat:
+        path: /etc/smartcare/jenkins-trigger.env
+      register: jenkins_trigger_config
+
+    - name: Require the Jenkins trigger configuration
+      ansible.builtin.assert:
+        that:
+          - jenkins_trigger_config.stat.exists
+          - jenkins_trigger_config.stat.pw_name == "root"
+          - jenkins_trigger_config.stat.mode == "0600"
+        fail_msg: Create /etc/smartcare/jenkins-trigger.env owned by root with mode 0600 before applying this playbook.
+
     - name: Check Docker version
       ansible.builtin.command:
         cmd: docker --version
       register: docker_version
+      changed_when: false
+
+    - name: Verify Docker is usable by the Jenkins execution account
+      become_user: jenkins
+      ansible.builtin.command:
+        cmd: docker info
+      register: jenkins_docker_info
       changed_when: false
 
     - name: Display Docker version

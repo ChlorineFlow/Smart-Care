@@ -1,6 +1,6 @@
 @echo off
 setlocal
-rem Usage: smartcare-cloud.bat [start|connect|stop]     (default: start)
+rem Usage: smartcare-cloud.bat [start|connect|shell|stop] (default: start)
 rem SSM starts services and forwards Jenkins to localhost without inbound SSH/Jenkins rules.
 if not defined SC_REGION set SC_REGION=ap-south-1
 if not defined SC_NAME   set SC_NAME=smartcare-devops-server
@@ -17,7 +17,7 @@ if "%ID%"=="None" (echo No instance tagged %SC_NAME% in %SC_REGION%. & exit /b 1
 
 if /i "%ACTION%"=="stop" goto stop
 if /i "%ACTION%"=="connect" goto connect
-if /i not "%ACTION%"=="start" (echo Unknown action: %ACTION% - use start, connect, or stop. & exit /b 1)
+if /i not "%ACTION%"=="start" if /i not "%ACTION%"=="shell" (echo Unknown action: %ACTION% - use start, connect, shell, or stop. & exit /b 1)
 
 for /f "delims=" %%i in ('aws ec2 describe-instances --region %SC_REGION% --instance-ids %ID% --query "Reservations[0].Instances[0].State.Name" --output text') do set INSTANCE_STATE=%%i
 if /i "%INSTANCE_STATE%"=="stopped" goto start_ec2
@@ -38,6 +38,7 @@ set /a ATTEMPTS=0
 :wait_ssm
 set "SSM_STATUS="
 for /f "delims=" %%i in ('aws ssm describe-instance-information --region %SC_REGION% --filters "Key=InstanceIds,Values=%ID%" --query "InstanceInformationList[0].PingStatus" --output text 2^>nul') do set SSM_STATUS=%%i
+if /i "%SSM_STATUS%"=="Online" if /i "%ACTION%"=="shell" goto open_shell
 if /i "%SSM_STATUS%"=="Online" goto start_services
 set /a ATTEMPTS+=1
 if %ATTEMPTS% GEQ 36 (
@@ -48,8 +49,8 @@ timeout /t 10 /nobreak >nul
 goto wait_ssm
 
 :start_services
-echo Starting Docker, K3s, and Jenkins, then deploying the latest published app through SSM ...
-for /f "delims=" %%i in ('aws ssm send-command --region %SC_REGION% --instance-ids %ID% --document-name AWS-RunShellScript --parameters "commands=['sudo systemctl start docker k3s jenkins && sudo install -d -o ubuntu -g ubuntu /opt/smartcare-deploy && if [ ! -d /opt/smartcare-deploy/.git ]; then sudo -u ubuntu git clone --depth 1 --branch main https://github.com/ChlorineFlow/Smart-Care.git /opt/smartcare-deploy; else sudo -u ubuntu git -C /opt/smartcare-deploy fetch origin main && sudo -u ubuntu git -C /opt/smartcare-deploy checkout -B main origin/main; fi && sudo bash /opt/smartcare-deploy/scripts/deploy-k3s.sh latest']" --query "Command.CommandId" --output text') do set COMMAND_ID=%%i
+echo Ensuring Docker, K3s, and Jenkins are running through SSM ...
+for /f "delims=" %%i in ('aws ssm send-command --region %SC_REGION% --instance-ids %ID% --document-name AWS-RunShellScript --parameters "commands=['sudo systemctl start docker k3s jenkins']" --query "Command.CommandId" --output text') do set COMMAND_ID=%%i
 if not defined COMMAND_ID (echo Failed to send the SSM command. Check your AWS SSM permissions and instance status. & exit /b 1)
 if "%COMMAND_ID%"=="None" (echo Failed to send the SSM command. Check your AWS SSM permissions and instance status. & exit /b 1)
 aws ssm wait command-executed --region %SC_REGION% --command-id %COMMAND_ID% --instance-id %ID%
@@ -63,7 +64,8 @@ if errorlevel 1 exit /b 1
 echo.
 echo Jenkins is available independent of your public IP through an SSM tunnel.
 echo Run smartcare-cloud.bat connect, then open http://localhost:8080
-echo SmartCare deployment status is shown above; the website is served on the EC2 HTTP address.
+echo GitHub Actions starts stopped EC2 instances and triggers Jenkins after CI and SonarCloud pass.
+echo The website is served on the EC2 HTTP address.
 echo.
 echo GitHub Actions, SonarCloud and Gmail SMTP are hosted services: nothing to start.
 exit /b 0
@@ -71,6 +73,11 @@ exit /b 0
 :connect
 echo Forwarding Jenkins to http://localhost:8080 . Keep this window open.
 aws ssm start-session --region %SC_REGION% --target %ID% --document-name AWS-StartPortForwardingSession --parameters "portNumber=8080,localPortNumber=8080"
+exit /b %ERRORLEVEL%
+
+:open_shell
+echo Opening an interactive EC2 shell through SSM. No SSH port is used.
+aws ssm start-session --region %SC_REGION% --target %ID%
 exit /b %ERRORLEVEL%
 
 :stop

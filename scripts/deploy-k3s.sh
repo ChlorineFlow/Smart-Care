@@ -1,60 +1,112 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
 
-IMAGE_TAG="${1:-latest}"
-DEPLOY_DIR="${SMARTCARE_DEPLOY_DIR:-/opt/smartcare-deploy}"
-APP_ENV_FILE="${SMARTCARE_ENV_FILE:-/etc/smartcare/app.env}"
+COMMIT_SHA="${1:-}"
+K8S_NAMESPACE="${2:-smartcare}"
+BACKEND_DEPLOYMENT="${3:-smartcare-backend}"
+BACKEND_CONTAINER="${4:-smartcare-backend}"
+BACKEND_SERVICE="${5:-smartcare-backend}"
+FRONTEND_DEPLOYMENT="${6:-smartcare-frontend}"
+FRONTEND_CONTAINER="${7:-smartcare-frontend}"
+FRONTEND_SERVICE="${8:-smartcare-frontend}"
+BACKEND_SERVICE_PORT="${9:-4000}"
+FRONTEND_SERVICE_PORT="${10:-80}"
+IMAGE_PREFIX="${IMAGE_PREFIX:-ghcr.io/chlorineflow/smart-care}"
 
-if [[ ! "$IMAGE_TAG" =~ ^[A-Za-z0-9._-]+$ ]]; then
-  echo "Invalid image tag: $IMAGE_TAG" >&2
+if [[ ! "$COMMIT_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+  echo "Expected a full 40-character commit SHA." >&2
   exit 2
 fi
 
-if [[ ! -f "$APP_ENV_FILE" ]]; then
-  echo "Missing $APP_ENV_FILE; create it with the production app environment first." >&2
+for command in kubectl curl; do
+  command -v "$command" >/dev/null || { echo "Missing required command: $command" >&2; exit 1; }
+done
+
+get_container_image() {
+  kubectl get "deployment/$1" --namespace="$K8S_NAMESPACE" \
+    --output="jsonpath={.spec.template.spec.containers[?(@.name==\"$2\")].image}"
+}
+
+kubectl get "deployment/$BACKEND_DEPLOYMENT" --namespace="$K8S_NAMESPACE" >/dev/null
+kubectl get "deployment/$FRONTEND_DEPLOYMENT" --namespace="$K8S_NAMESPACE" >/dev/null
+kubectl get "service/$BACKEND_SERVICE" --namespace="$K8S_NAMESPACE" >/dev/null
+kubectl get "service/$FRONTEND_SERVICE" --namespace="$K8S_NAMESPACE" >/dev/null
+
+PREVIOUS_BACKEND_IMAGE="$(get_container_image "$BACKEND_DEPLOYMENT" "$BACKEND_CONTAINER")"
+PREVIOUS_FRONTEND_IMAGE="$(get_container_image "$FRONTEND_DEPLOYMENT" "$FRONTEND_CONTAINER")"
+if [[ -z "$PREVIOUS_BACKEND_IMAGE" || -z "$PREVIOUS_FRONTEND_IMAGE" ]]; then
+  echo "Could not find the configured containers in the existing Deployments; no resources were changed." >&2
   exit 1
 fi
 
-KUBECTL=(k3s kubectl)
-for attempt in $(seq 1 60); do
-  if "${KUBECTL[@]}" get nodes >/dev/null 2>&1; then
+NEW_BACKEND_IMAGE="$IMAGE_PREFIX-backend:sha-$COMMIT_SHA"
+NEW_FRONTEND_IMAGE="$IMAGE_PREFIX-frontend:sha-$COMMIT_SHA"
+DEPLOYMENT_STARTED=0
+BACKEND_FORWARD_PID=""
+FRONTEND_FORWARD_PID=""
+BACKEND_LOG="$(mktemp)"
+FRONTEND_LOG="$(mktemp)"
+FRONTEND_BODY="$(mktemp)"
+
+cleanup() {
+  status=$?
+  set +e
+  [[ -n "$BACKEND_FORWARD_PID" ]] && kill "$BACKEND_FORWARD_PID" 2>/dev/null
+  [[ -n "$FRONTEND_FORWARD_PID" ]] && kill "$FRONTEND_FORWARD_PID" 2>/dev/null
+  if [[ $status -ne 0 && $DEPLOYMENT_STARTED -eq 1 ]]; then
+    echo "Deployment failed; restoring the previous container images." >&2
+    kubectl set image "deployment/$BACKEND_DEPLOYMENT" \
+      "$BACKEND_CONTAINER=$PREVIOUS_BACKEND_IMAGE" --namespace="$K8S_NAMESPACE"
+    kubectl set image "deployment/$FRONTEND_DEPLOYMENT" \
+      "$FRONTEND_CONTAINER=$PREVIOUS_FRONTEND_IMAGE" --namespace="$K8S_NAMESPACE"
+    kubectl rollout status "deployment/$BACKEND_DEPLOYMENT" --namespace="$K8S_NAMESPACE" --timeout=180s
+    kubectl rollout status "deployment/$FRONTEND_DEPLOYMENT" --namespace="$K8S_NAMESPACE" --timeout=180s
+  fi
+  rm -f "$BACKEND_LOG" "$FRONTEND_LOG" "$FRONTEND_BODY"
+  exit "$status"
+}
+trap cleanup EXIT
+
+DEPLOYMENT_STARTED=1
+kubectl set image "deployment/$BACKEND_DEPLOYMENT" \
+  "$BACKEND_CONTAINER=$NEW_BACKEND_IMAGE" --namespace="$K8S_NAMESPACE"
+kubectl set image "deployment/$FRONTEND_DEPLOYMENT" \
+  "$FRONTEND_CONTAINER=$NEW_FRONTEND_IMAGE" --namespace="$K8S_NAMESPACE"
+kubectl rollout status "deployment/$BACKEND_DEPLOYMENT" --namespace="$K8S_NAMESPACE" --timeout=180s
+kubectl rollout status "deployment/$FRONTEND_DEPLOYMENT" --namespace="$K8S_NAMESPACE" --timeout=180s
+
+kubectl port-forward --address 127.0.0.1 \
+  "service/$BACKEND_SERVICE" "14000:$BACKEND_SERVICE_PORT" \
+  --namespace="$K8S_NAMESPACE" >"$BACKEND_LOG" 2>&1 &
+BACKEND_FORWARD_PID=$!
+kubectl port-forward --address 127.0.0.1 \
+  "service/$FRONTEND_SERVICE" "18080:$FRONTEND_SERVICE_PORT" \
+  --namespace="$K8S_NAMESPACE" >"$FRONTEND_LOG" 2>&1 &
+FRONTEND_FORWARD_PID=$!
+
+READY=0
+for attempt in $(seq 1 30); do
+  if curl --fail --silent --output "$FRONTEND_BODY" http://127.0.0.1:18080/ \
+    && curl --fail --silent http://127.0.0.1:14000/api/health >/dev/null; then
+    READY=1
     break
   fi
-  sleep 2
-done
-"${KUBECTL[@]}" wait --for=condition=Ready nodes --all --timeout=120s
-
-"${KUBECTL[@]}" apply -f "$DEPLOY_DIR/k8s/namespace.yaml"
-"${KUBECTL[@]}" create secret generic smartcare-app-env \
-  --namespace=smartcare \
-  --from-env-file="$APP_ENV_FILE" \
-  --dry-run=client -o yaml | "${KUBECTL[@]}" apply -f -
-
-for component in backend frontend; do
-  sed "s|:latest$|:${IMAGE_TAG}|" "$DEPLOY_DIR/k8s/${component}.yaml" \
-    | "${KUBECTL[@]}" apply --namespace=smartcare -f -
-done
-
-"${KUBECTL[@]}" rollout status --namespace=smartcare deployment/smartcare-backend --timeout=180s
-"${KUBECTL[@]}" rollout status --namespace=smartcare deployment/smartcare-frontend --timeout=180s
-
-PORT_FORWARD_LOG="$(mktemp)"
-"${KUBECTL[@]}" port-forward --namespace=smartcare service/smartcare-backend 127.0.0.1:14000:4000 >"$PORT_FORWARD_LOG" 2>&1 &
-PORT_FORWARD_PID=$!
-trap 'kill "$PORT_FORWARD_PID" 2>/dev/null || true; rm -f "$PORT_FORWARD_LOG"' EXIT
-
-for attempt in $(seq 1 30); do
-  if curl --fail --silent http://127.0.0.1:14000/api/health >/dev/null; then
-    echo "SmartCare deployed with image tag $IMAGE_TAG; API health check passed."
-    exit 0
+  if ! kill -0 "$BACKEND_FORWARD_PID" 2>/dev/null; then
+    cat "$BACKEND_LOG" >&2
+    exit 1
   fi
-  if ! kill -0 "$PORT_FORWARD_PID" 2>/dev/null; then
-    cat "$PORT_FORWARD_LOG" >&2
+  if ! kill -0 "$FRONTEND_FORWARD_PID" 2>/dev/null; then
+    cat "$FRONTEND_LOG" >&2
     exit 1
   fi
   sleep 2
 done
 
-cat "$PORT_FORWARD_LOG" >&2
-echo "SmartCare API health check timed out." >&2
-exit 1
+if [[ $READY -ne 1 ]]; then
+  cat "$BACKEND_LOG" "$FRONTEND_LOG" >&2
+  echo "Frontend or backend smoke test timed out." >&2
+  exit 1
+fi
+
+DEPLOYMENT_STARTED=0
+echo "Commit $COMMIT_SHA deployed. Existing Services and persistent data were not modified; frontend and API smoke tests passed."

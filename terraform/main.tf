@@ -79,6 +79,31 @@ resource "aws_iam_role" "github_actions_deploy" {
   })
 }
 
+resource "aws_ssm_document" "smartcare_jenkins_trigger" {
+  name            = "SmartCare-Trigger-Jenkins"
+  document_type   = "Command"
+  document_format = "YAML"
+  content = yamlencode({
+    schemaVersion = "2.2"
+    description   = "Trigger the private SmartCare Jenkins CD job for a verified commit SHA"
+    parameters = {
+      CommitSha = {
+        type           = "String"
+        allowedPattern = "^[a-f0-9]{40}$"
+        description    = "Full commit SHA that passed GitHub Actions CI and SonarCloud"
+      }
+    }
+    mainSteps = [{
+      action = "aws:runShellScript"
+      name   = "triggerSmartCareJenkins"
+      inputs = {
+        timeoutSeconds = "3600"
+        runCommand     = ["/usr/local/sbin/smartcare-trigger-jenkins '{{ CommitSha }}'"]
+      }
+    }]
+  })
+}
+
 resource "aws_iam_role_policy" "github_actions_deploy" {
   name = "smartcare-github-actions-ssm-deploy"
   role = aws_iam_role.github_actions_deploy.id
@@ -88,20 +113,25 @@ resource "aws_iam_role_policy" "github_actions_deploy" {
     Statement = [
       {
         Effect   = "Allow"
-        Action   = ["ec2:DescribeInstances"]
+        Action   = ["ec2:DescribeInstances", "ec2:DescribeInstanceStatus"]
         Resource = "*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["ec2:StartInstances"]
+        Resource = "arn:aws:ec2:ap-south-1:${data.aws_caller_identity.current.account_id}:instance/${aws_instance.smartcare.id}"
       },
       {
         Effect = "Allow"
         Action = ["ssm:SendCommand"]
         Resource = [
-          "arn:aws:ssm:ap-south-1::document/AWS-RunShellScript",
+          aws_ssm_document.smartcare_jenkins_trigger.arn,
           "arn:aws:ec2:ap-south-1:${data.aws_caller_identity.current.account_id}:instance/${aws_instance.smartcare.id}"
         ]
       },
       {
         Effect   = "Allow"
-        Action   = ["ssm:GetCommandInvocation", "ssm:ListCommandInvocations"]
+        Action   = ["ssm:DescribeInstanceInformation", "ssm:GetCommandInvocation", "ssm:ListCommandInvocations"]
         Resource = "*"
       }
     ]
