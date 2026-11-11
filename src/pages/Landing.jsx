@@ -1,27 +1,5 @@
 import Navbar from "../components/Navbar";
 import { useNavigate } from "react-router-dom";
-
-const doctors = [
-  {
-    name: "Dr. Ananya Krishnan",
-    specialty: "Cardiologist",
-    experience: "14 years experience",
-    photo: "https://randomuser.me/api/portraits/women/44.jpg",
-  },
-  {
-    name: "Dr. Rahul Menon",
-    specialty: "Neurologist",
-    experience: "11 years experience",
-    photo: "https://randomuser.me/api/portraits/men/75.jpg",
-  },
-  {
-    name: "Dr. Meera Iyer",
-    specialty: "Pediatrician",
-    experience: "9 years experience",
-    photo: "https://randomuser.me/api/portraits/women/68.jpg",
-  },
-];
-
 export default function Landing() {
   const navigate = useNavigate();
   return (
@@ -93,7 +71,6 @@ export default function Landing() {
         <div className="mt-10 md:mt-0">
           <img
             src="https://images.unsplash.com/photo-1584515933487-779824d29309"
-            alt="Doctor consulting a patient"
             className="w-[520px] rounded-2xl shadow-2xl transform hover:scale-105 transition duration-500"
           />
         </div>
@@ -130,19 +107,17 @@ export default function Landing() {
         </h2>
 
         <div className="grid md:grid-cols-3 gap-10">
-          {doctors.map((doc) => (
+          {[1, 2, 3].map((doc) => (
             <div
-              key={doc.name}
+              key={doc}
               className="bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition text-center"
             >
               <img
-                src={doc.photo}
-                alt={doc.name}
-                className="w-24 h-24 rounded-full mx-auto object-cover"
+                src={`https://randomuser.me/api/portraits/men/${30 + doc}.jpg`}
+                className="w-24 h-24 rounded-full mx-auto"
               />
-              <h3 className="mt-4 font-semibold text-lg">{doc.name}</h3>
-              <p className="text-gray-500">{doc.specialty}</p>
-              <p className="text-gray-400 text-sm mt-1">{doc.experience}</p>
+              <h3 className="mt-4 font-semibold text-lg">Dr. John Doe</h3>
+              <p className="text-gray-500">Cardiologist</p>
             </div>
           ))}
         </div>
